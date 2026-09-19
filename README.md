@@ -25,6 +25,7 @@ MX4SIO             | slim       |![x](https://progress-bar.xyz/1150?scale=2200&s
 MMCE               | slim       |![x](https://progress-bar.xyz/1350?scale=2200&suffix=KB/s)                        | ![x](https://progress-bar.xyz/100) | File System  | `mmce`
 MX4SIO             | FAT + 70k  |![x](https://progress-bar.xyz/1500?scale=2200&suffix=KB/s)                        | ![x](https://progress-bar.xyz/60)  | Block Device | `mx4sio`
 MMCE               | FAT + 70k  |![x](https://progress-bar.xyz/1700?scale=2200&suffix=KB/s)                        | ![x](https://progress-bar.xyz/100) | File System  | `mmce`
+DVR PFS            | PSX DESR   |![x](https://progress-bar.xyz/3?scale=2&suffix=MB/s)                              | ![x](https://progress-bar.xyz/100) | File System  | `dvr`
 iLink / IEEE1394   | FAT        |![x](https://progress-bar.xyz/6?scale=2&suffix=MB/s)                              | ![x](https://progress-bar.xyz/10)  | Block Device | `ilink`
 UDPBD              | ALL        |![x](https://progress-bar.xyz/10?scale=2&suffix=MB/s)                             | ![x](https://progress-bar.xyz/100) | Block Device | `udpbd`
 UDPFS              | ALL        |![x](https://progress-bar.xyz/10?scale=2&suffix=MB/s)                             | ![x](https://progress-bar.xyz/100) | File System  | `udpfs`
@@ -92,6 +93,7 @@ Options:
                     - udpfs  (file system)
                     - ilink  (block device)
                     - mmce   (file system)
+                    - dvr    (file system)
 
   -bsdfs=<driver>   Backing store fileystem drivers used for block device, supported are:
                     - exfat (default)
@@ -172,6 +174,7 @@ Usage examples:
   neutrino.elf -dvd=udpbd:path/to/filename.iso
   neutrino.elf -dvd=udpfs:path/to/filename.iso
   neutrino.elf -dvd=ata:path/to/filename.iso
+  neutrino.elf -dvd=dvr_pfs0:path/to/filename.iso
   neutrino.elf -bsd=ata -bsdfs=hdl -dvd=hdl:filename.iso
   neutrino.elf -bsd=udpbd -bsdfs=bd -dvd=bdfs:udp0p0
 ```

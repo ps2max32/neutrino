@@ -1,0 +1,51 @@
+#ifdef DVRFILE_FS
+iomanX_IMPORTS_start
+I_iomanX_AddDrv
+I_iomanX_DelDrv
+iomanX_IMPORTS_end
+#endif
+
+pvrdrv_IMPORTS_start
+I_DvrdrvExecCmdAckComp
+#ifdef DVRFILE_FS
+I_DvrdrvExecCmdAckDma2Comp
+I_DvrdrvExecCmdAckDmaRecvComp
+I_DvrdrvExecCmdAckDmaSendComp
+#else
+I_DvrdrvExecCmdAckDmaRecvComp
+I_DvrdrvExecCmdAckDmaSendComp
+#endif
+pvrdrv_IMPORTS_end
+
+#ifdef DVRFILE_FHI
+loadcore_IMPORTS_start
+I_RegisterLibraryEntries
+loadcore_IMPORTS_end
+#endif
+
+stdio_IMPORTS_start
+I_printf
+stdio_IMPORTS_end
+
+sysclib_IMPORTS_start
+#ifdef DVRFILE_FS
+I_memcpy
+I_sprintf
+I_strcmp
+I_strcpy
+I_strlen
+#else
+I_memcpy
+#endif
+sysclib_IMPORTS_end
+
+thbase_IMPORTS_start
+I_DelayThread
+thbase_IMPORTS_end
+
+thsemap_IMPORTS_start
+I_CreateSema
+I_DeleteSema
+I_SignalSema
+I_WaitSema
+thsemap_IMPORTS_end

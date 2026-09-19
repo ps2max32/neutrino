@@ -48,13 +48,14 @@ const char *bsd_from_path(const char *path)
     memcpy(prefix, path, len);
     prefix[len] = '\0';
 
-    if (strcmp(prefix, "usb") == 0)    return "usb";
-    if (strcmp(prefix, "mx4sio") == 0) return "mx4sio";
-    if (strcmp(prefix, "ilink") == 0)  return "ilink";
-    if (strcmp(prefix, "ata") == 0)    return "ata";
-    if (strcmp(prefix, "udpbd") == 0)  return "udpbd";
-    if (strcmp(prefix, "mmce") == 0)   return "mmce";
-    if (strcmp(prefix, "udpfs") == 0)  return "udpfs";
+    if (strcmp(prefix, "usb") == 0)     return "usb";
+    if (strcmp(prefix, "mx4sio") == 0)  return "mx4sio";
+    if (strcmp(prefix, "ilink") == 0)   return "ilink";
+    if (strcmp(prefix, "ata") == 0)     return "ata";
+    if (strcmp(prefix, "udpbd") == 0)   return "udpbd";
+    if (strcmp(prefix, "mmce") == 0)    return "mmce";
+    if (strcmp(prefix, "udpfs") == 0)   return "udpfs";
+    if (strcmp(prefix, "dvr_pfs") == 0) return "dvr";
     return NULL;
 }
 

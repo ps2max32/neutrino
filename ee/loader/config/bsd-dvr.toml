@@ -1,0 +1,24 @@
+# Name of loaded config, to show to user
+name = "DVR filesystem driver"
+
+# Drivers this driver depends on (config file must exist)
+depends = ["i_dev9_ns"]
+
+# Modules to load in load environment
+[[module]]
+file = "iomanX.irx"
+env = ["LE"]
+[[module]]
+file = "fileXio.irx"
+env = ["LE"]
+[[module]]
+file = "dvrdrv.irx"
+env = ["LE", "EE"]
+[[module]]
+file = "dvrfile.irx"
+env = ["LE"]
+
+# FHI backend module (emulation environment)
+[[module]]
+file = "dvrfile_fhi.irx"
+env = ["EE"]

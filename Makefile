@@ -10,6 +10,8 @@ clean:
 	$(MAKE) -C iop/cdvdman_esr2  clean
 	$(MAKE) -C iop/dev9          clean DEV9_HIDDEN=1
 	$(MAKE) -C iop/dev9          clean DEV9_NO_SHUTDOWN=1
+	$(MAKE) -C iop/dvrfile       clean DVRFILE_FS=1
+	$(MAKE) -C iop/dvrfile       clean DVRFILE_FHI=1
 	$(MAKE) -C iop/fakemod       clean
 	$(MAKE) -C iop/fhi_bd        clean
 	$(MAKE) -C iop/gapfill       clean
@@ -39,6 +41,8 @@ all:
 	$(MAKE) -C iop/cdvdman_esr2  all DEBUG=$(IOPCORE_DEBUG)
 	$(MAKE) -C iop/dev9          all DEBUG=$(IOPCORE_DEBUG) DEV9_HIDDEN=1
 	$(MAKE) -C iop/dev9          all DEBUG=$(IOPCORE_DEBUG) DEV9_NO_SHUTDOWN=1
+	$(MAKE) -C iop/dvrfile       all DEBUG=$(IOPCORE_DEBUG) DVRFILE_FS=1
+	$(MAKE) -C iop/dvrfile       all DEBUG=$(IOPCORE_DEBUG) DVRFILE_FHI=1
 	$(MAKE) -C iop/fakemod       all DEBUG=$(IOPCORE_DEBUG)
 	$(MAKE) -C iop/fhi_bd        all DEBUG=$(IOPCORE_DEBUG)
 	$(MAKE) -C iop/gapfill       all DEBUG=$(IOPCORE_DEBUG)
@@ -70,6 +74,9 @@ copy:
 	cp iop/cdvdman_esr2/irx/cdvdman_esr2.irx   ee/loader/modules
 	cp iop/dev9/irx/dev9_hidden.irx            ee/loader/modules
 	cp iop/dev9/irx/dev9_ns.irx                ee/loader/modules
+	cp iop/dvrfile/irx/dvrfile.irx             ee/loader/modules
+	cp iop/dvrfile/irx/dvrfile_fhi.irx         ee/loader/modules
+	cp $(PS2SDK)/iop/irx/dvrdrv.irx            ee/loader/modules
 	cp iop/fakemod/irx/fakemod.irx             ee/loader/modules
 	cp iop/fhi_bd/irx/fhi_bd.irx               ee/loader/modules
 	cp iop/hdlfs/irx/hdlfs.irx                 ee/loader/modules

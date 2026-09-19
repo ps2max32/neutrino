@@ -54,9 +54,10 @@ int fhi_config_init(struct SModList *ml)
         unsigned int                    settings_size;
         void                          **settings_out;
     } candidates[] = {
-        { "fhi_bd.irx",    &ops_bd,     sizeof(struct fhi_bd),             (void **)&g_bd   },
-        { "mmcefhi.irx",   &ops_fileid, sizeof(struct fhi_fileid),         (void **)&g_fileid },
-        { "udpfs_fhi.irx", &ops_fileid, sizeof(struct fhi_fileid),         (void **)&g_fileid },
+        { "fhi_bd.irx",      &ops_bd,     sizeof(struct fhi_bd),             (void **)&g_bd   },
+        { "mmcefhi.irx",     &ops_fileid, sizeof(struct fhi_fileid),         (void **)&g_fileid },
+        { "udpfs_fhi.irx",   &ops_fileid, sizeof(struct fhi_fileid),         (void **)&g_fileid },
+        { "dvrfile_fhi.irx", &ops_fileid, sizeof(struct fhi_fileid),         (void **)&g_fileid },
     };
     unsigned int i;
 
@@ -150,7 +151,7 @@ static int backend_bd_add_file_fd(int fhi_fid, int fd, const char *path)
 
 // ---------------------------------------------------------------------------
 // Backend: FILEID (pre-opened file handles)
-// Shared by both mmcefhi.irx and udpfs_fhi.irx
+// Shared by mmcefhi.irx, udpfs_fhi.irx and dvrfile_fhi.irx
 // ---------------------------------------------------------------------------
 static int backend_fileid_add_file_fd(int fhi_fid, int fd, const char *path)
 {

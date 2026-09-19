@@ -65,6 +65,7 @@ void print_usage()
     printf("                    - udpfs  (file system)\n");
     printf("                    - ilink  (block device)\n");
     printf("                    - mmce   (file system)\n");
+    printf("                    - dvr    (file system)\n");
     printf("\n");
     printf("  -bsdfs=<driver>   Backing store fileystem drivers used for block device, supported are:\n");
     printf("                    - exfat (default)\n");
@@ -650,8 +651,8 @@ int main(int argc, char *argv[])
             return -1;
         }
 
-        // mmce and udpfs devices don't have a filesystem layer
-        if ((!strcmp(sys.sBSD, "mmce")) || (!strcmp(sys.sBSD, "udpfs")))
+        // mmce, udpfs and dvr devices don't have a filesystem layer
+        if ((!strcmp(sys.sBSD, "mmce")) || (!strcmp(sys.sBSD, "udpfs")) || (!strcmp(sys.sBSD, "dvr")))
             sys.sBSDFS = "no";
 
         if (!strcmp(sys.sBSDFS, "no")) {
@@ -720,11 +721,27 @@ int main(int argc, char *argv[])
         /*
          * Reboot IOP into Load Environment (LE)
          */
-        printf("Reboot IOP into Load Environment (LE)\n");
+        if (!strncmp(sys.sBSD, "dvr", 3))
+            printf("Switch to PSX mode and reboot IOP into Load Environment (LE)\n");
+        else
+            printf("Reboot IOP into Load Environment (LE)\n");
+
         SifExitIopHeap();
         SifLoadFileExit();
         SifExitRpc();
         SifInitRpc(0);
+
+        if (!strncmp(sys.sBSD, "dvr", 3)) {
+            while (!SifIopReset("rom0:UDNL rom0:OSDCNF", 0)){};
+            while (!SifIopSync()){};
+            SifInitRpc(0);
+            sceCdInit(SCECdINoD);
+            uint8_t in[4] = {0};
+            uint8_t out[16] = {};
+            sceCdApplySCmd(0x29, in, 4, out);
+            sceCdInit(SCECdEXIT);
+        }
+
         while(!SifIopReset("", 0)){};
         while(!SifIopSync()) {};
         SifInitRpc(0);
