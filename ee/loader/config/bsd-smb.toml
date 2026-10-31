@@ -1,0 +1,28 @@
+# Name of loaded config, to show to user
+name = "SMB driver"
+
+# Drivers this driver depends on (config file must exist)
+depends = ["i_dev9_hidden"]
+
+# Modules to load
+[[module]]
+file = "iomanX.irx"
+env = ["LE"]
+[[module]]
+file = "fileXio.irx"
+env = ["LE"]
+[[module]]
+file = "smap.irx"
+env = ["LE", "EE"]
+[[module]]
+file = "ministack.irx"
+args = ["ip=192.168.1.10"]
+env = ["LE", "EE"]
+[[module]]
+file = "smb_ioman.irx"
+args = ["ip=192.168.1.10", "mask=255.255.255.0", "gw=192.168.1.1", "srv=192.168.1.2", "user=guest", "pass=", "share=PS2SMB"]
+env = ["LE"]
+[[module]]
+file = "smb_fhi.irx"
+args = ["ip=192.168.1.10", "mask=255.255.255.0", "gw=192.168.1.1", "srv=192.168.1.2", "user=guest", "pass=", "share=PS2SMB"]
+env = ["EE"]

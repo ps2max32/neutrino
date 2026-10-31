@@ -67,6 +67,13 @@ int ip_packet_send_ll(ip_packet_t *pkt, uint16_t pktdatasize, const void *data, 
     return eth_packet_send_ll((eth_packet_t *)pkt, sizeof(ip_header_t) + pktdatasize, data, datasize);
 }
 
+static ip_proto_handler tcp_handler;
+
+void ip_set_tcp_handler(ip_proto_handler handler)
+{
+    tcp_handler = handler;
+}
+
 int handle_rx_ipv4(const uint8_t *hdr, uint16_t hdr_len)
 {
     const ip_packet_t *pkt = (const ip_packet_t *)hdr;
@@ -74,6 +81,8 @@ int handle_rx_ipv4(const uint8_t *hdr, uint16_t hdr_len)
     switch (pkt->ip.proto) {
         case IP_PROTOCOL_UDP:
             return handle_rx_udp(hdr, hdr_len);
+        case IP_PROTOCOL_TCP:
+            return tcp_handler ? tcp_handler(hdr, hdr_len) : -1;
         default:
             //M_DEBUG("ministack: ipv4: protocol 0x%X\n", pkt->ip.proto);
             return -1;

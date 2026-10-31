@@ -7,4 +7,6 @@ DECLARE_EXPORT_TABLE(mstack, 1, 0)
     DECLARE_EXPORT(udp_bind)
     DECLARE_EXPORT(udp_packet_init)
     DECLARE_EXPORT(udp_packet_send_ll)
+    DECLARE_EXPORT(arp_resolve)
+    DECLARE_EXPORT(ip_set_tcp_handler)
 END_EXPORT_TABLE

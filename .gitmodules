@@ -1,0 +1,3 @@
+[submodule "iop/smb/usmb2"]
+	path = iop/smb/usmb2
+	url = https://github.com/sahlberg/usmb2.git
