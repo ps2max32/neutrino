@@ -39,6 +39,19 @@ typedef struct
 } __attribute__((packed, aligned(4))) ip_packet_t;
 
 #define IP_PROTOCOL_UDP 0x11
+#define IP_PROTOCOL_TCP 0x06
+
+/**
+ * Handler for received TCP packets, hdr points to the first bytes of the
+ * frame (the ethernet header). Return < 0 to drop the packet.
+ * Called from the smap driver's thread.
+ */
+typedef int (*ip_proto_handler)(const uint8_t *hdr, uint16_t hdr_len);
+
+/**
+ * Hand all received TCP packets to handler, NULL to drop them again.
+ */
+void ip_set_tcp_handler(ip_proto_handler handler);
 
 /**
  * Initialize IP packet
