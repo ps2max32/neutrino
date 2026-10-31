@@ -13,6 +13,7 @@
 #include <thsemap.h>
 
 #include "usmb2.h"
+#include "ps2iop-compat.h"
 #include "smb_conn.h"
 #include "fhi_smb_config.h"
 
@@ -59,20 +60,51 @@ int fhi_write(int file_handle, const void *buffer, unsigned int sector_start, un
         return 0;
 }
 
-static void connect_thread(void *arg)
+/* Opens every configured file. 0 if all of them opened */
+static int open_files(void)
 {
         int i;
 
-        while (smb_connect()) {
-                DelayThread(1000 * 1000);
-        }
         for (i = 0; i < FHI_MAX_FILES; i++) {
-                if (fhi.file[i].path[0]) {
-                        fids[i] = smb_open(fhi.file[i].path);
-                        if (fids[i] == NULL) {
-                                printf("smb_fhi: open %s failed\n", fhi.file[i].path);
-                        }
+                if (fhi.file[i].path[0] == 0) {
+                        continue;
                 }
+                fids[i] = smb_open(fhi.file[i].path);
+                if (fids[i] == NULL) {
+                        printf("smb_fhi: open %s failed\n", fhi.file[i].path);
+                        return -1;
+                }
+        }
+        return 0;
+}
+
+/* Drops the file ids and the connection, before connecting again */
+static void drop_connection(void)
+{
+        int i;
+
+        for (i = 0; i < FHI_MAX_FILES; i++) {
+                if (fids[i]) {
+                        free(fids[i]);
+                        fids[i] = NULL;
+                }
+        }
+        if (smb) {
+                free(smb);
+                smb = NULL;
+        }
+}
+
+/*
+ * Connects and opens the files, and starts again with a new connection until
+ * all of them are open: the server or network may come back, and until then
+ * cdvdman_emu waits on fhi_size().
+ */
+static void connect_thread(void *arg)
+{
+        while (smb_connect() || open_files()) {
+                drop_connection();
+                DelayThread(1000 * 1000);
         }
         ready = 1;
 }

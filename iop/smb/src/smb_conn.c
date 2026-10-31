@@ -68,10 +68,11 @@ int smb_connect(void)
         GetSystemTime(&t);
         tcp.src_port = htons(40000 + (t.lo & 0x3fff));
         tcp.dst_port = htons(445);
+        /* Before ps2smap_init(): its receive handler reads the port */
+        ps2smap_set_port(&tcp.src_port);
         if (ps2smap_init(ip, mask, gw)) {
                 return -1;
         }
-        ps2smap_set_port(&tcp.src_port);
 
         if (tcp_connect(&tcp) < 0) {
                 printf("smb: no connection to %d.%d.%d.%d\n", (int)(srv >> 24), (int)(srv >> 16) & 0xff, (int)(srv >> 8) & 0xff, (int)srv & 0xff);
@@ -96,13 +97,17 @@ int smb_connect(void)
 
 uint8_t *smb_open(const char *path)
 {
-        char name[256];
+        char name[SMB_NAME_MAX + 1];
         int i;
 
         while (*path == '/' || *path == '\\') {
                 path++;
         }
-        for (i = 0; path[i] && i < sizeof(name) - 1; i++) {
+        if (strlen(path) > SMB_NAME_MAX) {
+                printf("smb: path too long: %s\n", path);
+                return NULL;
+        }
+        for (i = 0; path[i]; i++) {
                 name[i] = path[i] == '/' ? '\\' : path[i];
         }
         name[i] = 0;
