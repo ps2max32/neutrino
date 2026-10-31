@@ -32,3 +32,13 @@ $(IOP_OBJS_DIR)%.o: $(USMB2_DIR)/%.c
 $(IOP_OBJS_DIR)%.o: $(USMB2_DIR)/z80/%.c
 	$(DIR_GUARD)
 	$(IOP_C_COMPILE) -c $< -o $@
+
+# usmb2's hand-written MIPS asm for its sources, about 3.4 KB smaller than the
+# C (usmb2/mips/README). USMB2_ASM=0 builds the C instead.
+USMB2_ASM ?= 1
+ifeq ($(USMB2_ASM),1)
+USMB2_ASM_OBJS = md5 md4c hmac-md5 ntlm ip tcp ps2smap usmb2 ps2iop-compat
+$(addprefix $(IOP_OBJS_DIR),$(addsuffix .o,$(USMB2_ASM_OBJS))): $(IOP_OBJS_DIR)%.o: $(USMB2_DIR)/mips/%.S
+	$(DIR_GUARD)
+	$(IOP_C_COMPILE) -c $< -o $@
+endif
