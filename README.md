@@ -28,6 +28,7 @@ MMCE               | FAT + 70k  |![x](https://progress-bar.xyz/1700?scale=2200&s
 iLink / IEEE1394   | FAT        |![x](https://progress-bar.xyz/6?scale=2&suffix=MB/s)                              | ![x](https://progress-bar.xyz/10)  | Block Device | `ilink`
 UDPBD              | ALL        |![x](https://progress-bar.xyz/10?scale=2&suffix=MB/s)                             | ![x](https://progress-bar.xyz/100) | Block Device | `udpbd`
 UDPFS              | ALL        |![x](https://progress-bar.xyz/10?scale=2&suffix=MB/s)                             | ![x](https://progress-bar.xyz/100) | File System  | `udpfs`
+SMB (read-only)    | ALL        | not measured on a PS2                                                            | ![x](https://progress-bar.xyz/100) | File System  | `smb`
 ATA (internal HDD) | FAT        |![x](https://progress-bar.xyz/30?scale=2&suffix=MB/s)                             | ![x](https://progress-bar.xyz/100) | Block Device | `ata`
 
 Clarifying information:
@@ -92,6 +93,7 @@ Options:
                     - udpfs  (file system)
                     - ilink  (block device)
                     - mmce   (file system)
+                    - smb    (file system, read-only)
 
   -bsdfs=<driver>   Backing store fileystem drivers used for block device, supported are:
                     - exfat (default)
@@ -171,10 +173,32 @@ Usage examples:
   neutrino.elf -dvd=ilink:path/to/filename.iso
   neutrino.elf -dvd=udpbd:path/to/filename.iso
   neutrino.elf -dvd=udpfs:path/to/filename.iso
+  neutrino.elf -dvd=smb:path/to/filename.iso
   neutrino.elf -dvd=ata:path/to/filename.iso
   neutrino.elf -bsd=ata -bsdfs=hdl -dvd=hdl:filename.iso
   neutrino.elf -bsd=udpbd -bsdfs=bd -dvd=bdfs:udp0p0
 ```
+
+## SMB
+
+`-dvd=smb:path/to/filename.iso` plays a game from a share on an SMB2
+file server, over the network adapter. It uses
+[usmb2](https://github.com/sahlberg/usmb2), a minimal SMB2 client with its
+own tiny TCP/IP stack. Only DVD images are supported: the driver is
+read-only, so it cannot hold HDD or memory card images.
+
+The network, server and login are module arguments in
+`config/bsd-smb.toml`, the same for `smb_ioman.irx` and `smb_fhi.irx`, and
+the PS2's address also goes in `ministack.irx`'s arguments:
+
+```toml
+args = ["ip=192.168.1.10", "mask=255.255.255.0", "gw=192.168.1.1", "srv=192.168.1.2", "user=guest", "pass=", "share=PS2SMB"]
+```
+
+- `ip`, `mask`, `gw`: the PS2's address, netmask and gateway
+- `srv`: the address of the SMB server
+- `user`, `pass`: NTLM login
+- `share`: the name of the share; the path is relative to it
 
 ## UDPFS / UDPBD PC Server
 

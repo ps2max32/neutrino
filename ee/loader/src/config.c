@@ -55,6 +55,7 @@ const char *bsd_from_path(const char *path)
     if (strcmp(prefix, "udpbd") == 0)  return "udpbd";
     if (strcmp(prefix, "mmce") == 0)   return "mmce";
     if (strcmp(prefix, "udpfs") == 0)  return "udpfs";
+    if (strcmp(prefix, "smb") == 0)    return "smb";
     return NULL;
 }
 
