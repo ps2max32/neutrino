@@ -22,6 +22,7 @@ static void cdvdfsv_startrpcthreads(void);
 static void cdvdfsv_rpc0_th(void *args);
 static void cdvdfsv_rpc1_th(void *args);
 static void cdvdfsv_rpc2_th(void *args);
+static void shutdown_storage(void);
 static void *cbrpc_cdinit(int fno, void *buf, int size);
 static void *cbrpc_cddiskready(int fno, void *buf, int size);
 static void *cbrpc_cddiskready2(int fno, void *buf, int size);
@@ -133,7 +134,8 @@ int _start(int argc, char *argv[])
 //-------------------------------------------------------------------------
 static void init_thread(void *args)
 {
-    int cdvdman_intr_ef, dummy;
+    int cdvdman_intr_ef, dummy = 0;
+    u32 stat;
 
     M_DEBUG("%s\n", __FUNCTION__);
 
@@ -143,13 +145,49 @@ static void init_thread(void *args)
     cdvdfsv_sectors = cdvdfsv_size / 2048;
     cdvdfsv_startrpcthreads();
 
-    // Simplified poffloop: block until power-off event, then exit.
-    // Original also sends SIF cmd 0x80000012 to EE before exiting.
+    // The IOP interrupt remains available even if a game replaces EE hooks.
+    // Give this sleeping thread enough priority to handle the button promptly.
+    ChangeThreadPriority(GetThreadId(), 1);
     cdvdman_intr_ef = sceCdSC(CDSC_GET_INTRFLAG, &dummy);
     ClearEventFlag(cdvdman_intr_ef, ~CDVDEF_POWER_OFF);
     WaitEventFlag(cdvdman_intr_ef, CDVDEF_POWER_OFF, WEF_AND, NULL);
 
+    // Acknowledge the interrupt; the actual power-off command comes later.
+    CDVDreg_PWOFF = CDL_DATA_END;
+
+    // Stop new disc reads and drain the active request before touching the
+    // backing HDD. The DEV9 callback then parks the drive before power is cut.
+    sceCdSC(CDSC_NEUTRINO_SHUTDOWN, &dummy);
+    shutdown_storage();
+    sceCdPowerOff(&stat);
+
     ExitDeleteThread();
+}
+
+//-------------------------------------------------------------------------
+static void shutdown_storage(void)
+{
+    iop_library_t *atad = ioplib_getByName("atad\0\0\0\0");
+    iop_library_t *dev9 = ioplib_getByName("dev9\0\0\0\0");
+
+    // ATAD export 17 flushes the drive's write cache. The subsequent DEV9
+    // shutdown callback issues ATA STANDBY IMMEDIATE before removing power.
+    if (atad != NULL && atad->version >= 0x103 && atad->exports[17] != NULL) {
+        int (*flush_cache)(int) = atad->exports[17];
+        flush_cache(0);
+        flush_cache(1);
+    }
+
+    if (dev9 != NULL) {
+        if (dev9->version >= 0x10a && dev9->exports[16] != NULL) {
+            void (*physical_poweroff)(void) = dev9->exports[16];
+            physical_poweroff();
+        } else if (dev9->exports[6] != NULL) {
+            // Compatibility with an older DEV9 module without export 16.
+            void (*shutdown)(void) = dev9->exports[6];
+            shutdown();
+        }
+    }
 }
 
 //-------------------------------------------------------------------------

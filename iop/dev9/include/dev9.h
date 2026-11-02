@@ -30,6 +30,7 @@ void dev9RegisterIntrCb(int intr, dev9_intr_cb_t cb);
 int dev9DmaTransfer(int ctrl, void *buf, int bcr, int dir);
 
 void dev9Shutdown(void);
+void dev9PowerOff(void);
 void dev9IntrEnable(int mask);
 void dev9IntrDisable(int mask);
 
