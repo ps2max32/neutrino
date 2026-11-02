@@ -72,8 +72,10 @@ static const patchlist_t patch_list[] = {
     {"SLES_553.46", {0x0035414C, 0x2402FFFF, 0x0C0EE74E}},             // Rugby League 2: World Cup Edition PAL
     {"SLPS_251.03", {PATCH_SRW_IMPACT,       0x00000000, 0x00000000}}, // Super Robot Wars IMPACT Limited Edition
     {"SLPS_251.04", {PATCH_SRW_IMPACT,       0x00000000, 0x00000000}}, // Super Robot Wars IMPACT
-    {"SCUS_973.53", {PATCH_RNC_UYA,          0x0084c645, 0x00000000}}, // Ratchet and Clank: Up Your Arsenal
-    {"SCES_524.56", {PATCH_RNC_UYA,          0x0084c726, 0x00000000}}, // Ratchet and Clank: Up Your Arsenal
+    {"SCUS_973.53", {PATCH_RNC_UYA,          0x0084c645, 0x00000000}}, // Ratchet and Clank: Up Your Arsenal NTSC
+    {"SCES_524.56", {PATCH_RNC_UYA,          0x0084c726, 0x00000000}}, // Ratchet and Clank: Up Your Arsenal PAL
+    {"SCPS_150.84", {PATCH_RNC_UYA,          0x00851883, 0x00000000}}, // Ratchet and Clank: Up Your Arsenal JAP
+    {"SCKA_200.37", {PATCH_RNC_UYA,          0x0086cf08, 0x00000000}}, // Ratchet and Clank: Up Your Arsenal KOR
     {"SLES_533.98", {PATCH_ZOMBIE_ZONE,      0x001b2c08, 0x00000000}}, // Zombie Zone
     {"SLES_544.61", {PATCH_ZOMBIE_ZONE,      0x001b3e20, 0x00000000}}, // Zombie Hunters
     {"SLPM_625.25", {PATCH_ZOMBIE_ZONE,      0x001b1dc0, 0x00000000}}, // Simple 2000 Series Vol. 61: The Oneechanbara

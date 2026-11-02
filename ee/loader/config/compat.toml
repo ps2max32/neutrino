@@ -120,9 +120,9 @@ MODE9 = {name = "Compat MODE9: NOP"}
 # ---------------------------------------------------------------------------
 # Game specific modes
 # These override the default modes AND the command line
-"SLUS_973.53" = {name = "Ratchet & Clank Up Your Arsenal",       depends = ["p-uya"]}
-"SCES_524.56" = {name = "Ratchet & Clank 3",                     depends = ["p-uya"]}
-"SCPS_150.84" = {name = "Ratchet & Clank 3 Galactic Rangers",    depends = ["p-uya"]} # added by 1052
+#"SCUS_973.53" = {name = "Ratchet & Clank Up Your Arsenal",       depends = ["p-uya"]} # games that rely on p-uya patch for multiplayer are
+#"SCES_524.56" = {name = "Ratchet & Clank 3",                     depends = ["p-uya"]} # commented until issue #212 is resolved
+#"SCKA_200.37" = {name = "Ratchet & Clank: Gonggu Jeonsa Reloaded", depends = ["p-uya"]}
 "SCES_511.76" = {name = "Disney's Treasure Planet",              depends = ["p-membo"]}
 "SCUS_971.46" = {name = "Disney's Treasure Planet",              depends = ["p-membo"]} # added by 1052
 "SCES_511.77" = {name = "Disney's Treasure Planet",              depends = ["p-membo"]} # added by 1052
