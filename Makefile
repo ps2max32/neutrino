@@ -28,6 +28,8 @@ clean:
 	$(MAKE) -C iop/udpfs         clean UDPFS_FHI=1
 	$(MAKE) -C iop/smb           clean SMB_IOMAN=1
 	$(MAKE) -C iop/smb           clean SMB_FHI=1
+	$(MAKE) -C iop/nfs           clean NFS_IOMAN=1
+	$(MAKE) -C iop/nfs           clean NFS_FHI=1
 	$(MAKE) -C iop/usbd_null     clean
 	$(MAKE) -C ee/ee_core        clean
 	$(MAKE) -C ee/loader         clean
@@ -59,6 +61,8 @@ all:
 	$(MAKE) -C iop/udpfs         all DEBUG=$(IOPCORE_DEBUG) UDPFS_FHI=1
 	$(MAKE) -C iop/smb           all DEBUG=$(IOPCORE_DEBUG) SMB_IOMAN=1
 	$(MAKE) -C iop/smb           all DEBUG=$(IOPCORE_DEBUG) SMB_FHI=1
+	$(MAKE) -C iop/nfs           all DEBUG=$(IOPCORE_DEBUG) NFS_IOMAN=1
+	$(MAKE) -C iop/nfs           all DEBUG=$(IOPCORE_DEBUG) NFS_FHI=1
 	$(MAKE) -C iop/usbd_null     all DEBUG=$(IOPCORE_DEBUG)
 	$(MAKE) -C ee/ee_core        all EESIO_DEBUG=$(EESIO_DEBUG)
 	$(MAKE) -C ee/loader         all DEBUG=0
@@ -90,6 +94,8 @@ copy:
 	cp iop/udpfs/irx/udpfs_fhi.irx             ee/loader/modules
 	cp iop/smb/irx/smb_ioman.irx               ee/loader/modules
 	cp iop/smb/irx/smb_fhi.irx                 ee/loader/modules
+	cp iop/nfs/irx/nfs_ioman.irx               ee/loader/modules
+	cp iop/nfs/irx/nfs_fhi.irx                 ee/loader/modules
 	cp ee/ee_core/ee_core.elf                  ee/loader/modules
 	cp $(PS2SDK)/iop/irx/udnl.irx              ee/loader/modules
 	cp $(PS2SDK)/iop/irx/udnl-t300.irx         ee/loader/modules

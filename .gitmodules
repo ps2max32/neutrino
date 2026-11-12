@@ -1,3 +1,6 @@
 [submodule "iop/smb/usmb2"]
 	path = iop/smb/usmb2
 	url = https://github.com/sahlberg/usmb2.git
+[submodule "iop/nfs/unfs4"]
+	path = iop/nfs/unfs4
+	url = https://github.com/sahlberg/unfs4.git
