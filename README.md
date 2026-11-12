@@ -29,6 +29,7 @@ iLink / IEEE1394   | FAT        |![x](https://progress-bar.xyz/6?scale=2&suffix=
 UDPBD              | ALL        |![x](https://progress-bar.xyz/10?scale=2&suffix=MB/s)                             | ![x](https://progress-bar.xyz/100) | Block Device | `udpbd`
 UDPFS              | ALL        |![x](https://progress-bar.xyz/10?scale=2&suffix=MB/s)                             | ![x](https://progress-bar.xyz/100) | File System  | `udpfs`
 SMB (read-only)    | ALL        | not measured on a PS2                                                            | ![x](https://progress-bar.xyz/100) | File System  | `smb`
+NFS (read-only)    | ALL        | not measured on a PS2                                                            | ![x](https://progress-bar.xyz/100) | File System  | `nfs`
 ATA (internal HDD) | FAT        |![x](https://progress-bar.xyz/30?scale=2&suffix=MB/s)                             | ![x](https://progress-bar.xyz/100) | Block Device | `ata`
 
 Clarifying information:
@@ -94,6 +95,7 @@ Options:
                     - ilink  (block device)
                     - mmce   (file system)
                     - smb    (file system, read-only)
+                    - nfs    (file system, read-only)
 
   -bsdfs=<driver>   Backing store fileystem drivers used for block device, supported are:
                     - exfat (default)
@@ -174,6 +176,7 @@ Usage examples:
   neutrino.elf -dvd=udpbd:path/to/filename.iso
   neutrino.elf -dvd=udpfs:path/to/filename.iso
   neutrino.elf -dvd=smb:path/to/filename.iso
+  neutrino.elf -dvd=nfs:path/to/filename.iso
   neutrino.elf -dvd=ata:path/to/filename.iso
   neutrino.elf -bsd=ata -bsdfs=hdl -dvd=hdl:filename.iso
   neutrino.elf -bsd=udpbd -bsdfs=bd -dvd=bdfs:udp0p0
@@ -199,6 +202,36 @@ args = ["ip=192.168.1.10", "mask=255.255.255.0", "gw=192.168.1.1", "srv=192.168.
 - `srv`: the address of the SMB server
 - `user`, `pass`: NTLM login
 - `share`: the name of the share; the path is relative to it
+
+## NFS
+
+`-dvd=nfs:path/to/filename.iso` plays a game from an NFS export, over the
+network adapter. It uses [unfs4](https://github.com/sahlberg/unfs4), a
+minimal NFSv4.0 client, on the same tiny TCP/IP stack as SMB. Only DVD
+images are supported: the driver is read-only, so it cannot hold HDD or
+memory card images.
+
+The network, server and export are module arguments in
+`config/bsd-nfs.toml`, the same for `nfs_ioman.irx` and `nfs_fhi.irx`, and
+the PS2's address also goes in `ministack.irx`'s arguments:
+
+```toml
+args = ["ip=192.168.1.10", "mask=255.255.255.0", "gw=192.168.1.1", "srv=192.168.1.2", "export=/srv/ps2"]
+```
+
+- `ip`, `mask`, `gw`: the PS2's address, netmask and gateway
+- `srv`: the address of the NFS server
+- `export`: the exported directory; the path is relative to it
+- `uid`, `gid`: the AUTH_SYS credentials, 0 if not given. With the usual
+  root squash that is the anonymous user, so the images must be readable
+  by everyone.
+
+The server must have NFSv4.0 enabled. The PS2 connects from a port below
+1024, so the export does not need the `insecure` option. On Linux:
+
+```
+/srv/ps2  192.168.1.0/24(ro)
+```
 
 ## UDPFS / UDPBD PC Server
 

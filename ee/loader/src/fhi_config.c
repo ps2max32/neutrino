@@ -17,6 +17,7 @@ _off64_t lseek64(int __filedes, _off64_t __offset, int __whence); // should be i
 #include "../../../common/include/fhi_bd_config.h"    // fhi_bd, fhi_bd_file — also pulls usbhdfsd-common.h
 #include "../../../common/include/fhi_fileid_config.h"
 #include "../../../common/include/fhi_smb_config.h"
+#include "../../../common/include/fhi_nfs_config.h"
 
 #include "fhi_config.h"
 #include "modlist.h"
@@ -27,6 +28,7 @@ _off64_t lseek64(int __filedes, _off64_t __offset, int __whence); // should be i
 static struct fhi_bd     *g_bd   = NULL;
 static struct fhi_fileid *g_fileid = NULL;
 static struct fhi_smb    *g_smb  = NULL;
+static struct fhi_nfs    *g_nfs  = NULL;
 
 // ---------------------------------------------------------------------------
 // Vtable
@@ -40,10 +42,12 @@ struct fhi_backend_ops {
 static int backend_bd_add_file_fd(int fhi_fid, int fd, const char *path);
 static int backend_fileid_add_file_fd(int fhi_fid, int fd, const char *path);
 static int backend_smb_add_file_fd(int fhi_fid, int fd, const char *path);
+static int backend_nfs_add_file_fd(int fhi_fid, int fd, const char *path);
 
 static const struct fhi_backend_ops ops_bd   = { backend_bd_add_file_fd,   0 };
 static const struct fhi_backend_ops ops_fileid = { backend_fileid_add_file_fd, 1 };
 static const struct fhi_backend_ops ops_smb    = { backend_smb_add_file_fd,    0 };
+static const struct fhi_backend_ops ops_nfs    = { backend_nfs_add_file_fd,    0 };
 
 static const struct fhi_backend_ops *g_ops = NULL;
 
@@ -62,6 +66,7 @@ int fhi_config_init(struct SModList *ml)
         { "mmcefhi.irx",   &ops_fileid, sizeof(struct fhi_fileid),         (void **)&g_fileid },
         { "udpfs_fhi.irx", &ops_fileid, sizeof(struct fhi_fileid),         (void **)&g_fileid },
         { "smb_fhi.irx",   &ops_smb,    sizeof(struct fhi_smb),            (void **)&g_smb    },
+        { "nfs_fhi.irx",   &ops_nfs,    sizeof(struct fhi_nfs),            (void **)&g_nfs    },
     };
     unsigned int i;
 
@@ -187,6 +192,23 @@ static int backend_smb_add_file_fd(int fhi_fid, int fd, const char *path)
     }
     strcpy(g_smb->file[fhi_fid].path, colon + 1);
     g_smb->file[fhi_fid].size = lseek64(fd, 0, SEEK_END);
+
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
+// Backend: NFS (files looked up by path after each IOP reboot)
+// ---------------------------------------------------------------------------
+static int backend_nfs_add_file_fd(int fhi_fid, int fd, const char *path)
+{
+    const char *colon = strchr(path, ':');
+
+    if (colon == NULL || strlen(colon + 1) >= FHI_NFS_PATH_MAX) {
+        printf("Path too long for nfs: %s\n", path);
+        return -1;
+    }
+    strcpy(g_nfs->file[fhi_fid].path, colon + 1);
+    g_nfs->file[fhi_fid].size = lseek64(fd, 0, SEEK_END);
 
     return 0;
 }

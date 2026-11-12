@@ -66,6 +66,7 @@ void print_usage()
     printf("                    - ilink  (block device)\n");
     printf("                    - mmce   (file system)\n");
     printf("                    - smb    (file system, read-only)\n");
+    printf("                    - nfs    (file system, read-only)\n");
     printf("\n");
     printf("  -bsdfs=<driver>   Backing store fileystem drivers used for block device, supported are:\n");
     printf("                    - exfat (default)\n");
@@ -146,6 +147,7 @@ void print_usage()
     printf("  neutrino.elf -dvd=udpbd:path/to/filename.iso\n");
     printf("  neutrino.elf -dvd=udpfs:path/to/filename.iso\n");
     printf("  neutrino.elf -dvd=smb:path/to/filename.iso\n");
+    printf("  neutrino.elf -dvd=nfs:path/to/filename.iso\n");
     printf("  neutrino.elf -dvd=ata:path/to/filename.iso\n");
     printf("  neutrino.elf -bsd=ata -bsdfs=hdl -dvd=hdl:filename.iso\n");
     printf("  neutrino.elf -bsd=udpbd -bsdfs=bd -dvd=bdfs:udp0p0\n");
@@ -652,8 +654,9 @@ int main(int argc, char *argv[])
             return -1;
         }
 
-        // mmce, udpfs and smb devices don't have a filesystem layer
-        if ((!strcmp(sys.sBSD, "mmce")) || (!strcmp(sys.sBSD, "udpfs")) || (!strcmp(sys.sBSD, "smb")))
+        // mmce, udpfs, smb and nfs devices don't have a filesystem layer
+        if ((!strcmp(sys.sBSD, "mmce")) || (!strcmp(sys.sBSD, "udpfs")) || (!strcmp(sys.sBSD, "smb")) ||
+            (!strcmp(sys.sBSD, "nfs")))
             sys.sBSDFS = "no";
 
         if (!strcmp(sys.sBSDFS, "no")) {
