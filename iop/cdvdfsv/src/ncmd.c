@@ -171,7 +171,7 @@ static inline int cdvd_readee(RpcCdvd_t *r)
 static inline int cdvd_readee(RpcCdvd_t *r)
 { // Read Disc data to EE mem buffer
     u8 curlsn_buf[16];
-    u32 nbytes, nsectors, sectors_to_read, size_64b, size_64bb, bytesent, temp;
+    u32 nbytes, nsectors, sectors_to_read, size_64b, size_64bb, bytesent, temp, ee_seg;
     u16 sector_size;
     int flag_64b;
     void *fsvRbuf = (void *)cdvdfsv_buf;
@@ -190,6 +190,13 @@ static inline int cdvd_readee(RpcCdvd_t *r)
     if (r->mode.datapattern == SCECdSecS2340)
         sector_size = 2340;
 
+    // The EE side of sceCdRead copies the unaligned head/tail fragments itself, by writing
+    // through pdst1/pdst2. Keep them in the caller's address segment, like the original
+    // cdvdfsv does: for a buffer in the uncached mirror (0x20000000) a masked pointer makes
+    // the EE write the fragments through the data cache, and the later write-back of those
+    // cache lines overwrites what the game has stored uncached next to them in the meantime.
+    ee_seg = (u32)r->buf & 0xe0000000;
+
     r->eeaddr1 = (void *)((u32)r->eeaddr1 & 0x1fffffff);
     r->eeaddr2 = (void *)((u32)r->eeaddr2 & 0x1fffffff);
     r->buf = (void *)((u32)r->buf & 0x1fffffff);
@@ -201,7 +208,7 @@ static inline int cdvd_readee(RpcCdvd_t *r)
 
     memset((void *)curlsn_buf, 0, 16);
 
-    readee.pdst1 = (void *)r->buf;
+    readee.pdst1 = (void *)((u32)r->buf | ee_seg);
     eeaddr_64b = (void *)(((u32)r->buf + 0x3f) & 0xffffffc0); // get the next 64-bytes aligned address
 
     if ((u32)r->buf & 0x3f)
@@ -214,7 +221,7 @@ static inline int cdvd_readee(RpcCdvd_t *r)
     temp = (u32)r->buf + nbytes;
     eeaddr2_64b = (void *)(temp & 0xffffffc0);
     temp -= (u32)eeaddr2_64b;
-    readee.pdst2 = eeaddr2_64b; // get the end address on a 64 bytes align
+    readee.pdst2 = (void *)((u32)eeaddr2_64b | ee_seg); // get the end address on a 64 bytes align
     readee.b2len = temp;        // get bytes remainder at end of 64 bytes align
     fsvRbuf += temp;
 
