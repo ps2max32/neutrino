@@ -10,6 +10,8 @@ typedef void (*StmCallback_t)(void);
 
 extern volatile unsigned char sync_flag_locked;
 
+void cdvdman_shutdown_io(void);
+
 
 void cdvdman_read_init();
 

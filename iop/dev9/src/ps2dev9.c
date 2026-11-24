@@ -361,6 +361,14 @@ static int dev9_device_reset(void)
 void dev9Shutdown(void)
 {
 #ifndef DEV9_NO_SHUTDOWN
+    dev9PowerOff();
+#endif
+}
+
+/* A physical power-off must still stop the drive in the no-shutdown build.
+ * dev9Shutdown() stays disabled there so games cannot turn off DEV9. */
+void dev9PowerOff(void)
+{
     int idx;
     USE_DEV9_REGS;
 
@@ -379,7 +387,6 @@ void dev9Shutdown(void)
         DEV9_REG(DEV9_R_POWER) = DEV9_REG(DEV9_R_POWER) & ~1;
     }
     DelayThread(1000000);
-#endif
 }
 
 static int dev9_card_find_manfid(u32 manfid)

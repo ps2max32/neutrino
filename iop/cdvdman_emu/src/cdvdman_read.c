@@ -13,6 +13,22 @@ static int cdvdman_ReadingThreadID;
 #define BOUNCE_BUF_SECTORS 1
 static u8 bounce_buf[BOUNCE_BUF_SECTORS * 2048];
 volatile unsigned char sync_flag_locked;
+static volatile unsigned char shutdown_locked;
+
+// Drain-and-gate approach adapted from Neutrino PR #213 (dirtrider735).
+// Block new reads before waiting for the in-flight backend request. This
+// also keeps the HDD idle while the power-off callback parks it.
+void cdvdman_shutdown_io(void)
+{
+    int old_state;
+
+    CpuSuspendIntr(&old_state);
+    shutdown_locked = 1;
+    CpuResumeIntr(old_state);
+
+    while (sync_flag_locked)
+        WaitEventFlag(cdvdman_stat.intr_ef, CDVDEF_MAN_UNLOCKED, WEF_AND, NULL);
+}
 
 
 //-------------------------------------------------------------------------
@@ -362,9 +378,9 @@ int sceCdRead_internal(u32 lsn, u32 sectors, void *buf, sceCdRMode *mode, enum E
     //
     CpuSuspendIntr(&OldState);
     {
-        if (sync_flag_locked) {
+        if (shutdown_locked || sync_flag_locked) {
             CpuResumeIntr(OldState);
-            M_DEBUG("%s: exiting (sync_flag_locked)...\n", __FUNCTION__);
+            M_DEBUG("%s: exiting (read or shutdown locked)...\n", __FUNCTION__);
             return 0;
         }
 
