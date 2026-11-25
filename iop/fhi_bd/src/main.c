@@ -59,7 +59,7 @@ void bdm_disconnect_bd(struct block_device *bd)
 
 //---------------------------------------------------------------------------
 // FHI export #4
-u32 fhi_size(int file_handle)
+uint32_t fhi_size(int file_handle)
 {
     if (file_handle < 0 || file_handle >= FHI_MAX_FILES || g_bd == NULL)
         return 0;

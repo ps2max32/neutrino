@@ -463,9 +463,7 @@ u32 *hookSio2man67()
     static u32 fake_stat;
     if (skip_sema_wait) {
         if ((SIO2STAT & 0xf000) != 0x1000) { // uh oh
-            u32 *ra;
-            __asm__("move %0, $ra\n"
-                    : "=r"(ra));
+            u32 *ra = __builtin_return_address(0);
             if (ra[0]) {
                 if ((ra[0] == 0x3c02bf80) && (ra[1] == 0x3442826c)) { // this really sucks
                     ra[0] = 0;

@@ -75,7 +75,7 @@ static unsigned int _udpbd_timeout(void *arg)
 //
 static int _udpbd_read(struct block_device *bd, uint64_t sector, void *buffer, uint16_t count)
 {
-    uint32_t EFBits;
+    u32 EFBits;
     iop_sys_clock_t clock;
     udpbd_pkt_rw_t pkt;
 
@@ -187,7 +187,7 @@ static int udpbd_read(struct block_device *bd, uint64_t sector, void *buffer, ui
 
 static int udpbd_write(struct block_device *bd, uint64_t sector, const void *buffer, uint16_t count)
 {
-    uint32_t EFBits;
+    u32 EFBits;
 
     M_DEBUG("%s: sector=%d, count=%d\n", __func__, (uint32_t)sector, count);
 

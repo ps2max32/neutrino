@@ -3,7 +3,7 @@ I_RegisterLibraryEntries
 loadcore_IMPORTS_end
 
 stdio_IMPORTS_start
-I_printf // used by libbdm!
+I_printf // used by bd_defrag.c
 stdio_IMPORTS_end
 
 sysclib_IMPORTS_start

@@ -1,123 +1,103 @@
 EESIO_DEBUG?=0
 IOPCORE_DEBUG?=0
 
-clean:
-	$(MAKE) -C iop/atad_emu      clean
-	$(MAKE) -C iop/bdfs          clean
-	$(MAKE) -C iop/cdvdfsv       clean
-	$(MAKE) -C iop/cdvdman_emu   clean
-	$(MAKE) -C iop/cdvdman_esr1  clean
-	$(MAKE) -C iop/cdvdman_esr2  clean
-	$(MAKE) -C iop/dev9          clean DEV9_HIDDEN=1
-	$(MAKE) -C iop/dev9          clean DEV9_NO_SHUTDOWN=1
-	$(MAKE) -C iop/fakemod       clean
-	$(MAKE) -C iop/fhi_bd        clean
-	$(MAKE) -C iop/gapfill       clean
-	$(MAKE) -C iop/hdlfs         clean
-	$(MAKE) -C iop/imgdrv        clean
-	$(MAKE) -C iop/mc_emu        clean
-	$(MAKE) -C iop/memcheck      clean
-	$(MAKE) -C iop/patch_freemem clean
-	$(MAKE) -C iop/patch_membo   clean
-	$(MAKE) -C iop/patch_rc_uya  clean
-	$(MAKE) -C iop/smap          clean
-	$(MAKE) -C iop/ministack     clean
-	$(MAKE) -C iop/udpbd         clean
-	$(MAKE) -C iop/udpfs         clean UDPFS_BD=1
-	$(MAKE) -C iop/udpfs         clean UDPFS_IOMAN=1
-	$(MAKE) -C iop/udpfs         clean UDPFS_FHI=1
-	$(MAKE) -C iop/smb           clean SMB_IOMAN=1
-	$(MAKE) -C iop/smb           clean SMB_FHI=1
-	$(MAKE) -C iop/nfs           clean NFS_IOMAN=1
-	$(MAKE) -C iop/nfs           clean NFS_FHI=1
-	$(MAKE) -C iop/usbd_null     clean
-	$(MAKE) -C ee/ee_core        clean
-	$(MAKE) -C ee/loader         clean
+PS2MAX ?= $(abspath $(CURDIR)/../..)
+OUT    ?= $(PS2MAX)/build/apps/neutrino
+# ps2sdk's prebuilt IOP modules; mmceman and mmcefhi (ps2-mmce) may be elsewhere
+PS2MAX_PS2DEV ?= $(abspath $(PS2MAX)/../ps2dev/install)
+PS2MAX_IRX    ?= $(PS2MAX_PS2DEV)/ps2sdk/iop/irx
+MMCE_IRX      ?= $(PS2MAX_IRX)
 
-all:
-	$(MAKE) -C iop/atad_emu      all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/bdfs          all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/cdvdfsv       all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/cdvdman_emu   all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/cdvdman_esr1  all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/cdvdman_esr2  all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/dev9          all DEBUG=$(IOPCORE_DEBUG) DEV9_HIDDEN=1
-	$(MAKE) -C iop/dev9          all DEBUG=$(IOPCORE_DEBUG) DEV9_NO_SHUTDOWN=1
-	$(MAKE) -C iop/fakemod       all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/fhi_bd        all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/gapfill       all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/hdlfs         all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/imgdrv        all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/mc_emu        all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/memcheck      all DEBUG=1
-	$(MAKE) -C iop/patch_freemem all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/patch_membo   all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/patch_rc_uya  all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/smap          all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/ministack     all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/udpbd         all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C iop/udpfs         all DEBUG=$(IOPCORE_DEBUG) UDPFS_BD=1
-	$(MAKE) -C iop/udpfs         all DEBUG=$(IOPCORE_DEBUG) UDPFS_IOMAN=1
-	$(MAKE) -C iop/udpfs         all DEBUG=$(IOPCORE_DEBUG) UDPFS_FHI=1
-	$(MAKE) -C iop/smb           all DEBUG=$(IOPCORE_DEBUG) SMB_IOMAN=1
-	$(MAKE) -C iop/smb           all DEBUG=$(IOPCORE_DEBUG) SMB_FHI=1
-	$(MAKE) -C iop/nfs           all DEBUG=$(IOPCORE_DEBUG) NFS_IOMAN=1
-	$(MAKE) -C iop/nfs           all DEBUG=$(IOPCORE_DEBUG) NFS_FHI=1
-	$(MAKE) -C iop/usbd_null     all DEBUG=$(IOPCORE_DEBUG)
-	$(MAKE) -C ee/ee_core        all EESIO_DEBUG=$(EESIO_DEBUG)
-	$(MAKE) -C ee/loader         all DEBUG=0
+all: iop ee
+
+# The IOP modules, with LLVM (iop/Rules.make): $(OUT)/irx/*.irx
+IOP_MODULES = atad_emu bdfs cdvdfsv cdvdman_emu cdvdman_esr1 cdvdman_esr2 fakemod fhi_bd gapfill hdlfs \
+              imgdrv mc_emu ministack patch_freemem patch_membo patch_rc_uya smap udpbd usbd_null
+IOP_MAKE    = $(MAKE) OUT=$(OUT) DEBUG=$(IOPCORE_DEBUG)
+
+iop: $(IOP_MODULES:%=iop-%) iop-memcheck iop-dev9 iop-udpfs iop-smb iop-nfs
+
+$(IOP_MODULES:%=iop-%): iop-%:
+	$(IOP_MAKE) -C iop/$*
+iop-memcheck:
+	$(IOP_MAKE) -C iop/memcheck DEBUG=1
+iop-dev9:
+	$(IOP_MAKE) -C iop/dev9 DEV9_HIDDEN=1
+	$(IOP_MAKE) -C iop/dev9 DEV9_NO_SHUTDOWN=1
+iop-udpfs:
+	$(IOP_MAKE) -C iop/udpfs UDPFS_BD=1
+	$(IOP_MAKE) -C iop/udpfs UDPFS_IOMAN=1
+	$(IOP_MAKE) -C iop/udpfs UDPFS_FHI=1
+iop-smb:
+	$(IOP_MAKE) -C iop/smb SMB_IOMAN=1
+	$(IOP_MAKE) -C iop/smb SMB_FHI=1
+iop-nfs:
+	$(IOP_MAKE) -C iop/nfs NFS_IOMAN=1
+	$(IOP_MAKE) -C iop/nfs NFS_FHI=1
+
+# The EE side, still with ps2dev's gcc and ps2sdk
+ee:
+	$(MAKE) -C ee/ee_core all EESIO_DEBUG=$(EESIO_DEBUG)
+	$(MAKE) -C ee/loader  all DEBUG=0
+
+clean:
+	rm -rf $(OUT)
+	$(MAKE) -C ee/ee_core clean
+	$(MAKE) -C ee/loader  clean
+
+.PHONY: all iop ee clean copy copy_extra $(IOP_MODULES:%=iop-%) iop-memcheck iop-dev9 iop-udpfs iop-smb iop-nfs
 
 copy:
 	rm -rf ee/loader/modules
 	mkdir -p ee/loader/modules
-	cp iop/atad_emu/irx/atad_emu.irx           ee/loader/modules
-	cp iop/bdfs/irx/bdfs.irx                   ee/loader/modules
-	cp iop/cdvdfsv/irx/cdvdfsv.irx             ee/loader/modules
-	cp iop/cdvdman_emu/irx/cdvdman_emu.irx     ee/loader/modules
-	cp iop/cdvdman_esr1/irx/cdvdman_esr1.irx   ee/loader/modules
-	cp iop/cdvdman_esr2/irx/cdvdman_esr2.irx   ee/loader/modules
-	cp iop/dev9/irx/dev9_hidden.irx            ee/loader/modules
-	cp iop/dev9/irx/dev9_ns.irx                ee/loader/modules
-	cp iop/fakemod/irx/fakemod.irx             ee/loader/modules
-	cp iop/fhi_bd/irx/fhi_bd.irx               ee/loader/modules
-	cp iop/hdlfs/irx/hdlfs.irx                 ee/loader/modules
-	cp iop/imgdrv/irx/imgdrv.irx               ee/loader/modules
-	cp iop/mc_emu/irx/mc_emu.irx               ee/loader/modules
-	cp iop/patch_freemem/irx/patch_freemem.irx ee/loader/modules
-	cp iop/patch_membo/irx/patch_membo.irx     ee/loader/modules
-	cp iop/patch_rc_uya/irx/patch_rc_uya.irx   ee/loader/modules
-	cp iop/udpbd/irx/udpbd.irx                 ee/loader/modules
-	cp iop/smap/irx/smap.irx                   ee/loader/modules
-	cp iop/ministack/irx/ministack.irx         ee/loader/modules
-	cp iop/udpfs/irx/udpfs_bd.irx              ee/loader/modules
-	cp iop/udpfs/irx/udpfs_ioman.irx           ee/loader/modules
-	cp iop/udpfs/irx/udpfs_fhi.irx             ee/loader/modules
-	cp iop/smb/irx/smb_ioman.irx               ee/loader/modules
-	cp iop/smb/irx/smb_fhi.irx                 ee/loader/modules
-	cp iop/nfs/irx/nfs_ioman.irx               ee/loader/modules
-	cp iop/nfs/irx/nfs_fhi.irx                 ee/loader/modules
+	cp $(OUT)/irx/atad_emu.irx           ee/loader/modules
+	cp $(OUT)/irx/bdfs.irx                   ee/loader/modules
+	cp $(OUT)/irx/cdvdfsv.irx             ee/loader/modules
+	cp $(OUT)/irx/cdvdman_emu.irx     ee/loader/modules
+	cp $(OUT)/irx/cdvdman_esr1.irx   ee/loader/modules
+	cp $(OUT)/irx/cdvdman_esr2.irx   ee/loader/modules
+	cp $(OUT)/irx/dev9_hidden.irx            ee/loader/modules
+	cp $(OUT)/irx/dev9_ns.irx                ee/loader/modules
+	cp $(OUT)/irx/fakemod.irx             ee/loader/modules
+	cp $(OUT)/irx/fhi_bd.irx               ee/loader/modules
+	cp $(OUT)/irx/hdlfs.irx                 ee/loader/modules
+	cp $(OUT)/irx/imgdrv.irx               ee/loader/modules
+	cp $(OUT)/irx/mc_emu.irx               ee/loader/modules
+	cp $(OUT)/irx/patch_freemem.irx ee/loader/modules
+	cp $(OUT)/irx/patch_membo.irx     ee/loader/modules
+	cp $(OUT)/irx/patch_rc_uya.irx   ee/loader/modules
+	cp $(OUT)/irx/udpbd.irx                 ee/loader/modules
+	cp $(OUT)/irx/smap.irx                   ee/loader/modules
+	cp $(OUT)/irx/ministack.irx         ee/loader/modules
+	cp $(OUT)/irx/udpfs_bd.irx              ee/loader/modules
+	cp $(OUT)/irx/udpfs_ioman.irx           ee/loader/modules
+	cp $(OUT)/irx/udpfs_fhi.irx             ee/loader/modules
+	cp $(OUT)/irx/smb_ioman.irx               ee/loader/modules
+	cp $(OUT)/irx/smb_fhi.irx                 ee/loader/modules
+	cp $(OUT)/irx/nfs_ioman.irx               ee/loader/modules
+	cp $(OUT)/irx/nfs_fhi.irx                 ee/loader/modules
 	cp ee/ee_core/ee_core.elf                  ee/loader/modules
-	cp $(PS2SDK)/iop/irx/udnl.irx              ee/loader/modules
-	cp $(PS2SDK)/iop/irx/udnl-t300.irx         ee/loader/modules
-	cp $(PS2SDK)/iop/irx/eesync.irx            ee/loader/modules
-	cp $(PS2SDK)/iop/irx/iomanX.irx            ee/loader/modules
-	cp $(PS2SDK)/iop/irx/fileXio.irx           ee/loader/modules
-	cp $(PS2SDK)/iop/irx/bdm.irx               ee/loader/modules
-	cp $(PS2SDK)/iop/irx/bdmfs_fatfs.irx       ee/loader/modules
-	cp $(PS2SDK)/iop/irx/ata_bd.irx            ee/loader/modules
-	cp $(PS2SDK)/iop/irx/ps2hdd-bdm.irx        ee/loader/modules
-	cp $(PS2SDK)/iop/irx/usbd_mini.irx         ee/loader/modules
-	cp $(PS2SDK)/iop/irx/usbmass_bd_mini.irx   ee/loader/modules
-	cp $(PS2SDK)/iop/irx/mx4sio_bd_mini.irx    ee/loader/modules
-	cp $(PS2SDK)/iop/irx/iLinkman.irx          ee/loader/modules
-	cp $(PS2SDK)/iop/irx/IEEE1394_bd_mini.irx  ee/loader/modules
-	cp $(PS2SDK)/iop/irx/mmceman.irx           ee/loader/modules
-	cp $(PS2SDK)/iop/irx/mmcefhi.irx           ee/loader/modules
+	cp $(PS2MAX_IRX)/udnl.irx              ee/loader/modules
+	cp $(PS2MAX_IRX)/udnl-t300.irx         ee/loader/modules
+	cp $(PS2MAX_IRX)/eesync.irx            ee/loader/modules
+	cp $(PS2MAX_IRX)/iomanX.irx            ee/loader/modules
+	cp $(PS2MAX_IRX)/fileXio.irx           ee/loader/modules
+	cp $(PS2MAX_IRX)/bdm.irx               ee/loader/modules
+	cp $(PS2MAX_IRX)/bdmfs_fatfs.irx       ee/loader/modules
+	cp $(PS2MAX_IRX)/ata_bd.irx            ee/loader/modules
+	cp $(PS2MAX_IRX)/ps2hdd-bdm.irx        ee/loader/modules
+	cp $(PS2MAX_IRX)/usbd_mini.irx         ee/loader/modules
+	cp $(PS2MAX_IRX)/usbmass_bd_mini.irx   ee/loader/modules
+	cp $(PS2MAX_IRX)/mx4sio_bd_mini.irx    ee/loader/modules
+	cp $(PS2MAX_IRX)/iLinkman.irx          ee/loader/modules
+	cp $(PS2MAX_IRX)/IEEE1394_bd_mini.irx  ee/loader/modules
+	cp $(MMCE_IRX)/mmceman.irx           ee/loader/modules
+	cp $(MMCE_IRX)/mmcefhi.irx           ee/loader/modules
 
 copy_extra:
-	cp iop/gapfill/irx/gapfill.irx             ee/loader/modules
-	cp iop/memcheck/irx/memcheck.irx           ee/loader/modules
-	cp iop/usbd_null/irx/usbd_null.irx         ee/loader/modules
+	cp $(OUT)/irx/gapfill.irx             ee/loader/modules
+	cp $(OUT)/irx/memcheck.irx           ee/loader/modules
+	cp $(OUT)/irx/usbd_null.irx         ee/loader/modules
 
 format:
 	find . -type f -a \( -iname \*.h -o -iname \*.c \) | xargs clang-format -i
