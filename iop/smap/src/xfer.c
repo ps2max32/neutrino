@@ -141,11 +141,15 @@ void smap_fifo_read(uint16_t offset, void *dst, uint32_t bytes)
             dev9DmaTransfer(1, dst, bcr, DMAC_TO_MEM);
     }
 
-    /* PIO remaining bytes (u32 chunks, then u16 for trailing 2 bytes) */
+    /* PIO remaining bytes (u32 chunks, then the last 1-3 bytes of a u32:
+       the frame in the FIFO is a whole number of words) */
     for (i = dma_bytes; i + 4 <= bytes; i += 4)
         *(u32 *)(d + i) = SMAP_REG32(SMAP_R_RXFIFO_DATA);
-    if (i + 2 <= bytes)
-        *(u16 *)(d + i) = SMAP_REG16(SMAP_R_RXFIFO_DATA);
+    if (i < bytes) {
+        u32 last = SMAP_REG32(SMAP_R_RXFIFO_DATA);
+        for (; i < bytes; i++, last >>= 8)
+            d[i] = (u8)last;
+    }
 }
 
 int HandleRxIntr(struct SmapDriverData *SmapDrivPrivData)
