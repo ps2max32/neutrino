@@ -112,6 +112,7 @@ run_mmce_qb: all copy copy_extra
 	$(MAKE) -C ee/loader run_mmce_qb
 
 # Copy neutrino to UDPBD shared drive, then run nhddl
+PS2_IP ?= 192.168.1.10
 UDPBD_BD = /dev/zd0p1
 run_nhddl: all copy copy_extra
 	mkdir -p temp
@@ -123,7 +124,7 @@ run_nhddl: all copy copy_extra
 	sudo cp    ee/loader/version.txt  temp
 	sudo umount $(UDPBD_BD)
 	rmdir temp
-	ps2client -h 192.168.1.10 execee host:nhddl.elf
+	ps2client -h $(PS2_IP) execee host:nhddl.elf
 
 # Start on PCSX2
 sim: all copy copy_extra
@@ -133,7 +134,7 @@ sim: all copy copy_extra
 sim_mount:
 	losetup -Pf ee/loader/bd_exfat.raw
 
-RELEASE_DIR = ./releases/neutrino_$(shell git describe --tags --exclude=latest)
+RELEASE_DIR = ./releases/neutrino_$(shell git describe --tags --exclude=latest --always)
 release: all copy
 	mkdir -p                     $(RELEASE_DIR)
 	cp    README.md              $(RELEASE_DIR)

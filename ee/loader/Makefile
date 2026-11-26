@@ -9,7 +9,7 @@ PS2MAX_LLVM_BIN ?= $(PS2MAX)/build/toolchain/llvm/feature/bin
 PICOLIBC   ?= $(PS2MAX)/build/libs/picolibc/install
 RT_BUILTINS ?= $(PS2MAX)/build/libs/maxsdk/librt.a
 
-GIT_TAG = $(shell git describe --tags --exclude=latest 2>/dev/null)
+GIT_TAG = $(shell git describe --tags --exclude=latest --always 2>/dev/null)
 
 OBJS      = main.o modlist.o config.o fhi_config.o xparam.o patch.o ioprp.o tomlc17.o iso_cnf.o
 MINI_OBJS = crt0.o syscalls.o kernel.o sifrpc.o iopheap.o sbv.o fio.o fileXio.o posix.o loadfile.o iopreset.o atomic.o
@@ -234,16 +234,19 @@ ARGS = -dvd=udpfs:$(GAME)
 #ARGS = -bsd=udpbd-hdd -dvd=mass:$(GAME) -ata0=mass:$(ATA0) -gc=0
 #ARGS = -bsd=udpbd -bsdfs=bd -dvd=bdfs:udp0p0
 
+# The PS2 that runs it (ps2link or a compatible loader)
+PS2_IP ?= 192.168.1.10
+
 # From here, with config/ and modules/ (the top Makefile's copy puts
 # neutrino.elf here too)
 run:
-	ps2client -h 192.168.1.10 execee host:neutrino.elf $(ARGS)
+	ps2client -h $(PS2_IP) execee host:neutrino.elf $(ARGS)
 
 run_mmce_qb:
-	ps2client -h 192.168.1.10 -t 1 execiop host:modules/iomanX.irx
-	ps2client -h 192.168.1.10 -t 1 execiop host:modules/fileXio.irx
-	ps2client -h 192.168.1.10 -t 1 execiop host:modules/mmceman.irx
-	ps2client -h 192.168.1.10 execee host:neutrino.elf $(ARGS) -qb
+	ps2client -h $(PS2_IP) -t 1 execiop host:modules/iomanX.irx
+	ps2client -h $(PS2_IP) -t 1 execiop host:modules/fileXio.irx
+	ps2client -h $(PS2_IP) -t 1 execiop host:modules/mmceman.irx
+	ps2client -h $(PS2_IP) execee host:neutrino.elf $(ARGS) -qb
 
 sim:
 	flatpak --filesystem=host run net.pcsx2.PCSX2 $(CURDIR)/neutrino.elf
