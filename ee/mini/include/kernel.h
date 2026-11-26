@@ -43,6 +43,8 @@ void _print(const char *fmt, ...);
 int DIntr(void);
 int EIntr(void);
 int EnableDmac(int channel);
+#define DI() __asm__ volatile("di\n\tsync.p" : : : "memory")
+#define EI() __asm__ volatile("ei" : : : "memory")
 int DisableDmac(int channel);
 
 // Write back and invalidate the data cache's lines: [start, end]
