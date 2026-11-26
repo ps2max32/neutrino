@@ -1,0 +1,29 @@
+# .github/workflows/ps2.yml of ps2max32/neutrino (template: ci/app.yml of ps2max32/docker).
+# Builds with the commits its ps2max.deps names (LLVM, maxsdk), through the
+# reusable build of ps2max32/docker. Every push and PR: the release package
+# (neutrino.elf, config/, modules/, the udpfs server) as an artifact; a tag
+# v*: also a GitHub release with it.
+name: ps2
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ps2:
+    uses: ps2max32/docker/.github/workflows/build.yml@main
+    with:
+      # the submodules (usmb2, unfs4, mmceman), the tags for the version
+      # (git describe) and 7-Zip for the package
+      setup: |
+        git submodule update --init --depth 1
+        git fetch --tags --unshallow --quiet
+        apk add --no-cache 7zip
+      build: |
+        make -j$(nproc) OUT=$PWD/out all
+        make OUT=$PWD/out release
+      artifacts: releases/*.7z
