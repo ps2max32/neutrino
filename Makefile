@@ -3,10 +3,9 @@ IOPCORE_DEBUG?=0
 
 PS2MAX ?= $(abspath $(CURDIR)/../..)
 OUT    ?= $(PS2MAX)/build/apps/neutrino
-# ps2sdk's prebuilt IOP modules; mmceman and mmcefhi (ps2-mmce) may be elsewhere
+# ps2sdk's prebuilt IOP modules
 PS2MAX_PS2DEV ?= $(abspath $(PS2MAX)/../ps2dev/install)
 PS2MAX_IRX    ?= $(PS2MAX_PS2DEV)/ps2sdk/iop/irx
-MMCE_IRX      ?= $(PS2MAX_IRX)
 
 all: iop ee
 
@@ -15,7 +14,7 @@ IOP_MODULES = atad_emu bdfs cdvdfsv cdvdman_emu cdvdman_esr1 cdvdman_esr2 fakemo
               imgdrv mc_emu ministack patch_freemem patch_membo patch_rc_uya smap udpbd usbd_null
 IOP_MAKE    = $(MAKE) OUT=$(OUT) DEBUG=$(IOPCORE_DEBUG)
 
-iop: $(IOP_MODULES:%=iop-%) iop-memcheck iop-dev9 iop-udpfs iop-smb iop-nfs
+iop: $(IOP_MODULES:%=iop-%) iop-memcheck iop-dev9 iop-udpfs iop-smb iop-nfs iop-mmce
 
 $(IOP_MODULES:%=iop-%): iop-%:
 	$(IOP_MAKE) -C iop/$*
@@ -34,6 +33,9 @@ iop-smb:
 iop-nfs:
 	$(IOP_MAKE) -C iop/nfs NFS_IOMAN=1
 	$(IOP_MAKE) -C iop/nfs NFS_FHI=1
+iop-mmce:
+	$(IOP_MAKE) -C iop/mmce
+	$(IOP_MAKE) -C iop/mmce MMCE_FHI=1
 
 # The EE side, still with ps2dev's gcc and ps2sdk
 ee:
@@ -45,7 +47,7 @@ clean:
 	$(MAKE) -C ee/ee_core clean
 	$(MAKE) -C ee/loader  clean
 
-.PHONY: all iop ee clean copy copy_extra $(IOP_MODULES:%=iop-%) iop-memcheck iop-dev9 iop-udpfs iop-smb iop-nfs
+.PHONY: all iop ee clean copy copy_extra $(IOP_MODULES:%=iop-%) iop-memcheck iop-dev9 iop-udpfs iop-smb iop-nfs iop-mmce
 
 copy:
 	rm -rf ee/loader/modules
@@ -91,8 +93,8 @@ copy:
 	cp $(PS2MAX_IRX)/mx4sio_bd_mini.irx    ee/loader/modules
 	cp $(PS2MAX_IRX)/iLinkman.irx          ee/loader/modules
 	cp $(PS2MAX_IRX)/IEEE1394_bd_mini.irx  ee/loader/modules
-	cp $(MMCE_IRX)/mmceman.irx           ee/loader/modules
-	cp $(MMCE_IRX)/mmcefhi.irx           ee/loader/modules
+	cp $(OUT)/irx/mmceman.irx                 ee/loader/modules
+	cp $(OUT)/irx/mmcefhi.irx                 ee/loader/modules
 
 copy_extra:
 	cp $(OUT)/irx/gapfill.irx             ee/loader/modules
