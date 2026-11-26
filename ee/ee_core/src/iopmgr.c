@@ -16,7 +16,7 @@
 #include "util.h"
 #include "eecore_config.h"
 
-extern int _iop_reboot_count; // defined in libkernel (iopcontrol.c)
+extern int _iop_reboot_count; // defined in mini (sifrpc.c)
 
 static int set_reg_hook = 0;
 static int get_reg_hook = 0;

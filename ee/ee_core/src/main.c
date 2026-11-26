@@ -32,13 +32,6 @@ static int callcount = 0;
 u32 g_ee_core_flags = 0; // easy to use copy for asm.S
 struct ee_core_data eec = {MODULE_SETTINGS_MAGIC};
 
-// This function is defined as weak in ps2sdkc, so how
-// we are not using time zone, so we can safe some KB
-void _ps2sdk_timezone_update() {}
-
-DISABLE_PATCHED_FUNCTIONS();      // Disable the patched functionalities
-DISABLE_EXTRA_TIMERS_FUNCTIONS(); // Disable the extra functionalities for timers
-
 int main(int argc, char **argv)
 {
     int i;

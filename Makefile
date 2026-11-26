@@ -37,14 +37,13 @@ iop-mmce:
 	$(IOP_MAKE) -C iop/mmce
 	$(IOP_MAKE) -C iop/mmce MMCE_FHI=1
 
-# The EE side, still with ps2dev's gcc and ps2sdk
+# The EE side: ee_core with LLVM (ee/mini), the loader still with ps2dev's gcc and ps2sdk
 ee:
-	$(MAKE) -C ee/ee_core all EESIO_DEBUG=$(EESIO_DEBUG)
+	$(MAKE) -C ee/ee_core all OUT=$(OUT) EESIO_DEBUG=$(EESIO_DEBUG)
 	$(MAKE) -C ee/loader  all DEBUG=0
 
 clean:
 	rm -rf $(OUT)
-	$(MAKE) -C ee/ee_core clean
 	$(MAKE) -C ee/loader  clean
 
 .PHONY: all iop ee clean copy copy_extra $(IOP_MODULES:%=iop-%) iop-memcheck iop-dev9 iop-udpfs iop-smb iop-nfs iop-mmce
@@ -78,7 +77,7 @@ copy:
 	cp $(OUT)/irx/smb_fhi.irx                 ee/loader/modules
 	cp $(OUT)/irx/nfs_ioman.irx               ee/loader/modules
 	cp $(OUT)/irx/nfs_fhi.irx                 ee/loader/modules
-	cp ee/ee_core/ee_core.elf                  ee/loader/modules
+	cp $(OUT)/ee_core.elf                  ee/loader/modules
 	cp $(PS2MAX_IRX)/udnl.irx              ee/loader/modules
 	cp $(PS2MAX_IRX)/udnl-t300.irx         ee/loader/modules
 	cp $(PS2MAX_IRX)/eesync.irx            ee/loader/modules

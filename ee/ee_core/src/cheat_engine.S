@@ -444,7 +444,7 @@ type_d:
     subu    $t5, $a1
     li      $at, 2          # less than
     beql    $t6, $at, 5f
-    sltu    $t5, $a1
+    sltu    $t5, $t5, $a1
     li      $at, 3          # greater than
     beql    $t6, $at, 5f
     sltu    $t5, $a1, $t5
