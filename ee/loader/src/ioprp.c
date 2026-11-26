@@ -1,5 +1,6 @@
 #include "ioprp.h"
 #include "modlist.h"
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -12,12 +13,12 @@ void print_extinfo(const uint8_t *data, uint32_t size)
         ext = (struct extinfo *)data;
 
         if (size < sizeof(struct extinfo)) {
-            printf("- -> ERROR: extsize1 %ld < 4\n", size);
+            printf("- -> ERROR: extsize1 %" PRIu32 " < 4\n", size);
             return;
         }
 
         if (size < (sizeof(struct extinfo) + ext->ext_length)) {
-            printf("- -> ERROR: extsize2 %ld < (4 + %d)\n", size, ext->ext_length);
+            printf("- -> ERROR: extsize2 %" PRIu32 " < (4 + %d)\n", size, ext->ext_length);
             return;
         }
 
@@ -26,7 +27,7 @@ void print_extinfo(const uint8_t *data, uint32_t size)
                 if (ext->ext_length == 0)
                     printf("- -> DATE = 0x%x\n", ext->value);
                 else if (ext->ext_length == 4)
-                    printf("- -> DATE = 0x%lx\n", *(uint32_t *)&data[sizeof(struct extinfo)]);
+                    printf("- -> DATE = 0x%" PRIx32 "\n", *(uint32_t *)&data[sizeof(struct extinfo)]);
                 else
                     printf("- -> DATE ???\n");
                 break;
@@ -54,7 +55,7 @@ void print_romdir(const struct romdir_entry *romdir)
     data += romdir[1].size; // FIXME: The offset where the extdata starts
 
     while (romdir->name[0] != '\0') {
-        printf("- %s [size=%ld, extsize=%d]\n", romdir->name, romdir->size, romdir->extinfo_size);
+        printf("- %s [size=%" PRIu32 ", extsize=%d]\n", romdir->name, romdir->size, romdir->extinfo_size);
 
         if (romdir->extinfo_size > 0) {
             print_extinfo(data, romdir->extinfo_size);

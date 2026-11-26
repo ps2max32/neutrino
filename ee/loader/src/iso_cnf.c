@@ -1,9 +1,10 @@
 #include <errno.h>
+#include <stdint.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-_off64_t lseek64(int __filedes, _off64_t __offset, int __whence);
+long long lseek64(int fd, long long offset, int whence);
 
 #define SECTOR_SIZE     2048
 #define TOC_LBA         16

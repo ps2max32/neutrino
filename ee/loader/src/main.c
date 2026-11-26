@@ -5,7 +5,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <malloc.h>
-_off64_t lseek64 (int __filedes, _off64_t __offset, int __whence); // should be defined in unistd.h ???
+#include <inttypes.h>
+long long lseek64(int fd, long long offset, int whence);
 
 // PS2SDK
 #include <kernel.h>
@@ -43,11 +44,6 @@ _off64_t lseek64 (int __filedes, _off64_t __offset, int __whence); // should be 
 #include <fileXio_rpc.h>
 #include <io_common.h>
 
-DISABLE_PATCHED_FUNCTIONS();      // Disable the patched functionalities
-DISABLE_EXTRA_TIMERS_FUNCTIONS(); // Disable the extra functionalities for timers
-PS2_DISABLE_AUTOSTART_PTHREAD();  // Disable pthread functionality
-void _libcglue_timezone_update() {}; // Disable timezone update
-void _libcglue_rtc_update() {}; // Disable rtc update
 
 struct SModule mod_ee_core;
 
@@ -282,7 +278,7 @@ static int parse_gsm_flags(void)
  * Detects DVD-DL by checking for a second PVD at layer0_lba_size.
  * Returns 0 on success, -1 on error.
  */
-static int setup_dvd_iso(const char *path, off_t *out_iso_size,
+static int setup_dvd_iso(const char *path, int64_t *out_iso_size,
                          uint32_t *out_layer1_lba_start)
 {
     int fd;
@@ -423,7 +419,7 @@ int main(int argc, char *argv[])
     int fd_system_cnf;
     char system_cnf_data[128] = {0};
     char romver[16];
-    off_t iso_size = 0;
+    int64_t iso_size = 0;
     uint32_t layer1_lba_start = 0;
     int iELFArgcStart;
 
@@ -1170,10 +1166,10 @@ int main(int argc, char *argv[])
     , sys.cdvdman.disk_id[4]);
     set_cdvdman->disk_id_int = sys.cdvdman.disk_id_int;
     printf("EE CORE settings:\n");
-    printf("- flags     = 0x%lx\n", set_ee_core->flags);
-    printf("- iop_rm[0] = %ld\n",   set_ee_core->iop_rm[0]);
-    printf("- iop_rm[1] = %ld\n",   set_ee_core->iop_rm[1]);
-    printf("- iop_rm[2] = %ld\n",   set_ee_core->iop_rm[2]);
+    printf("- flags     = 0x%" PRIx32 "\n", set_ee_core->flags);
+    printf("- iop_rm[0] = %" PRIu32 "\n", set_ee_core->iop_rm[0]);
+    printf("- iop_rm[1] = %" PRIu32 "\n", set_ee_core->iop_rm[1]);
+    printf("- iop_rm[2] = %" PRIu32 "\n", set_ee_core->iop_rm[2]);
     printf("- mod_base  = 0x%p\n",  set_ee_core->ModStorageStart);
     printf("- args:\n");
     for (int i = 0; i < ee_core_argc; i++) {

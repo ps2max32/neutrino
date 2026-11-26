@@ -3,7 +3,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
-_off64_t lseek64(int __filedes, _off64_t __offset, int __whence); // should be in unistd.h
+long long lseek64(int fd, long long offset, int whence);
 
 // PS2SDK
 #include <kernel.h>      // nopdelay
@@ -121,7 +121,7 @@ int fhi_add_file(int fhi_fid, const char *path, int flags)
 static int backend_bd_add_file_fd(int fhi_fid, int fd, const char *path)
 {
     int i, iop_fd;
-    _off64_t size;
+    long long size;
     unsigned int frag_start = 0;
     struct fhi_bd_file *frag = &g_bd->file[fhi_fid];
 
