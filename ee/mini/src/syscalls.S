@@ -34,6 +34,7 @@
     SYSCALL _print, __NR__print
     SYSCALL SifDmaStat, __NR_SifDmaStat
     SYSCALL SifSetDma, __NR_SifSetDma
+    SYSCALL iSifSetDma, __NR_iSifSetDma
     SYSCALL SifSetDChain, __NR_SifSetDChain
     SYSCALL iSifSetDChain, __NR_iSifSetDChain
     SYSCALL SifSetReg, __NR_SifSetReg

@@ -23,6 +23,7 @@
 #define __NR__print           0x75
 #define __NR_SifDmaStat       0x76
 #define __NR_SifSetDma        0x77
+#define __NR_iSifSetDma       (-0x77)
 #define __NR_SifSetDChain     0x78
 #define __NR_iSifSetDChain    (-0x78)
 #define __NR_SifSetReg        0x79

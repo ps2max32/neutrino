@@ -1,5 +1,6 @@
 // Part of neutrino: the EE side without an SDK. See README.md.
-// The SIF command and RPC client, on the BIOS. Both share one packet buffer
+// The SIF command and RPC client, on the BIOS, and the answers to the IOP's
+// reads of EE memory. Both share one packet buffer
 // for what the IOP sends and one table of RPC packets.
 #include <iopcontrol.h>
 #include <kernel.h>
@@ -77,6 +78,9 @@ static struct
     void *buf;
 } ALIGNED(64) addr_pkt;
 static rpc_packet_t packets[PACKET_COUNT]; // used uncached
+#define END_COUNT 8
+static rpc_packet_t end_packets[END_COUNT]; // the answers to the IOP, used uncached
+static u32 next_end;
 static u32 sys_handlers[32][3]; // for others: SIF_SYSREG_MAINADDR; not used here
 static vu32 sregs[SREG_COUNT];
 static u32 next_rpc_id;
@@ -86,8 +90,9 @@ static int rpc_init;
 int _iop_reboot_count = 0;
 
 //---------------------------------------------------------------------------
-// The packet goes to the IOP's buffer after the data
-static u32 send_cmd(u32 cid, void *pkt, int pktsize, void *src, void *dest, int size)
+// The packet goes to the IOP's buffer after the data. intr: from the
+// interrupt handler.
+static u32 send_cmd_mode(u32 cid, void *pkt, int pktsize, void *src, void *dest, int size, int intr)
 {
     SifDmaTransfer_t dmat[2];
     SifCmdHeader_t *header = UNCACHED_SEG(pkt);
@@ -115,7 +120,25 @@ static u32 send_cmd(u32 cid, void *pkt, int pktsize, void *src, void *dest, int 
     dmat[count].attr = SIF_DMA_ERT | SIF_DMA_INT_O;
     count++;
 
-    return SifSetDma(dmat, count);
+    return intr ? iSifSetDma(dmat, count) : SifSetDma(dmat, count);
+}
+
+static u32 send_cmd(u32 cid, void *pkt, int pktsize, void *src, void *dest, int size)
+{
+    return send_cmd_mode(cid, pkt, pktsize, src, dest, size, 0);
+}
+
+// The IOP reads EE memory (sceSifGetOtherData of a FILEIO or fileXio write):
+// the data, then RPC_END, from the interrupt handler
+static void rpc_rdata(rpc_packet_t *p)
+{
+    rpc_packet_t *end = UNCACHED_SEG(&end_packets[next_end++ % END_COUNT]);
+
+    end->pkt_addr  = p->pkt_addr;
+    end->cd        = p->cd;
+    end->u.end.cid = SIF_CMD_RPC_RDATA;
+    send_cmd_mode(SIF_CMD_RPC_END, (void *)((u32)end & ~0x20000000), PACKET_SIZE, p->u.rdata.src, p->u.rdata.dest,
+                  p->u.rdata.size, 1);
 }
 
 static void rpc_end(rpc_packet_t *p)
@@ -170,6 +193,9 @@ static int sif0_handler(int channel)
         case SIF_CMD_RPC_END:
             rpc_end(&packet.rpc);
             break;
+        case SIF_CMD_RPC_RDATA:
+            rpc_rdata(&packet.rpc);
+            break;
     }
 
 out:
@@ -204,6 +230,7 @@ static void init_cmd(void)
     FlushCache(WRITEBACK_DCACHE);
     SifWriteBackDCache(pktbuf, sizeof(pktbuf));
     SifWriteBackDCache(packets, sizeof(packets));
+    SifWriteBackDCache(end_packets, sizeof(end_packets));
     SifWriteBackDCache(&addr_pkt, sizeof(addr_pkt));
     for (int i = 0; i < PACKET_COUNT; i++)
         ((rpc_packet_t *)UNCACHED_SEG(packets))[i].rpc_id = 0;

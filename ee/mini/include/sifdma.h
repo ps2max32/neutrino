@@ -32,6 +32,7 @@ typedef struct t_SifDmaTransfer
 
 // The BIOS's system calls
 u32 SifSetDma(SifDmaTransfer_t *transfers, int count);
+u32 iSifSetDma(SifDmaTransfer_t *transfers, int count);
 int SifDmaStat(u32 id);
 void SifStopDma(void);
 void SifSetDChain(void);

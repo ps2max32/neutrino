@@ -10,4 +10,4 @@ and the LoadModuleBuffer patch, are as in ps2sdk (ps2dev, http://www.ps2dev.org,
 version 2.0).
 
 - `include/libc`: the headers of a C library, for programs without one (`ee_core`).
-- There is no RPC server: the EE is the client only.
+- There is no RPC server: the EE is a client, and answers the IOP's reads of EE memory (RPC_RDATA).
