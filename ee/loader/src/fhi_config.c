@@ -174,7 +174,7 @@ static int backend_fileid_add_file_fd(int fhi_fid, int fd, const char *path)
     }
 
     g_fileid->file[fhi_fid].id   = fileXioIoctl2(iop_fd, 0x80, NULL, 0, NULL, 0);
-    g_fileid->file[fhi_fid].size = lseek64(iop_fd, 0, SEEK_END);
+    g_fileid->file[fhi_fid].size = lseek64(fd, 0, SEEK_END);
 
     return 0;
 }
