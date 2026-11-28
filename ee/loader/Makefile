@@ -1,24 +1,58 @@
-GIT_TAG = $(shell git describe --tags --exclude=latest)
+# neutrino.elf, the loader, with LLVM, picolibc and ../mini (no SDK):
+#
+#   make [DEBUG=1] [OUT=<dir>]    <dir>/neutrino.elf, <dir>/version.txt
 
-EE_OBJS = main.o modlist.o config.o fhi_config.o xparam.o patch.o ioprp.o tomlc17.o iso_cnf.o
-EE_LIBS = -lfileXio -lpatches
-EE_CFLAGS = -DGIT_TAG=\"$(GIT_TAG)\"
+PS2MAX ?= $(abspath $(CURDIR)/../../../..)
+OUT    ?= $(PS2MAX)/build/apps/neutrino
+PS2MAX_LLVM_BIN ?= $(PS2MAX)/build/toolchain/llvm/feature/bin
+# picolibc and compiler-rt's builtins, as maxsdk builds them
+PICOLIBC   ?= $(PS2MAX)/build/libs/picolibc/install
+RT_BUILTINS ?= $(PS2MAX)/build/libs/maxsdk/librt.a
 
-EE_NEWLIB_NANO = 1
-EE_COMPACT_EXECUTABLE = 1
+GIT_TAG = $(shell git describe --tags --exclude=latest 2>/dev/null)
 
-EE_BIN_NAME = neutrino
-EE_BIN = $(EE_BIN_NAME)_unpacked.elf
-EE_BIN_PACKED = $(EE_BIN_NAME).elf
+OBJS      = main.o modlist.o config.o fhi_config.o xparam.o patch.o ioprp.o tomlc17.o iso_cnf.o
+MINI_OBJS = crt0.o syscalls.o kernel.o sifrpc.o iopheap.o sbv.o fio.o fileXio.o posix.o loadfile.o iopreset.o atomic.o
 
-$(EE_BIN_PACKED): $(EE_BIN)
-	ps2-packer $< $@ > /dev/null
+EE_OBJS_DIR = $(OUT)/obj/loader$(if $(filter 1,$(DEBUG)),.debug)
+EE_OBJS     = $(MINI_OBJS:%=$(EE_OBJS_DIR)/mini/%) $(OBJS:%=$(EE_OBJS_DIR)/%)
+EE_BIN      = $(OUT)/neutrino.elf
 
-version.txt: FORCE
+EE_CC     = $(PS2MAX_LLVM_BIN)/clang
+EE_CFLAGS = --target=mips64el -mcpu=r5900 -mabi=n32 -fno-pic -mno-abicalls -G0 -std=gnu17 -Wno-c23-extensions \
+            -fno-strict-aliasing -Os -Wall -Werror -ffunction-sections -fdata-sections -MMD -MP -D_EE \
+            -I../mini/include -isystem $(PICOLIBC)/include -DGIT_TAG=\"$(GIT_TAG)\" $(if $(filter 1,$(DEBUG)),-DDEBUG)
+
+all: $(EE_BIN) $(OUT)/version.txt
+
+$(EE_OBJS): Makefile
+
+$(EE_OBJS_DIR)/mini/%.o: ../mini/src/%.c
+	@mkdir -p $(@D)
+	$(EE_CC) $(EE_CFLAGS) -c $< -o $@
+
+$(EE_OBJS_DIR)/mini/%.o: ../mini/src/%.S
+	@mkdir -p $(@D)
+	$(EE_CC) $(EE_CFLAGS) -c $< -o $@
+
+$(EE_OBJS_DIR)/%.o: src/%.c
+	@mkdir -p $(@D)
+	$(EE_CC) $(EE_CFLAGS) -c $< -o $@
+
+# $(EE_OBJS_DIR)/neutrino.elf keeps the symbols
+$(EE_BIN): $(EE_OBJS) ../mini/ld/program.ld
+	$(PS2MAX_LLVM_BIN)/ld.lld -m elf32ltsmipn32 -T../mini/ld/program.ld -z max-page-size=128 --gc-sections \
+	  -Map $(EE_OBJS_DIR)/neutrino.map -o $(EE_OBJS_DIR)/neutrino.elf $(EE_OBJS) $(PICOLIBC)/lib/libc.a $(RT_BUILTINS)
+	$(PS2MAX_LLVM_BIN)/llvm-objcopy --strip-all $(EE_OBJS_DIR)/neutrino.elf $@
+
+$(OUT)/version.txt: FORCE
+	@mkdir -p $(@D)
 	echo $(GIT_TAG) > $@
 FORCE:
 
-all: $(EE_BIN_PACKED) version.txt
+-include $(EE_OBJS:.o=.d)
+
+.PHONY: all clean FORCE
 
 # TODO:
 #GAME = 'DVD/Twisted Metal - Black (E).iso'             # psxUNK -> IOP crash (executing data?)
@@ -200,25 +234,23 @@ ARGS = -dvd=udpfs:$(GAME)
 #ARGS = -bsd=udpbd-hdd -dvd=mass:$(GAME) -ata0=mass:$(ATA0) -gc=0
 #ARGS = -bsd=udpbd -bsdfs=bd -dvd=bdfs:udp0p0
 
-run: all
-	ps2client -h 192.168.1.10 execee host:$(EE_BIN_PACKED) $(ARGS)
+# From here, with config/ and modules/ (the top Makefile's copy puts
+# neutrino.elf here too)
+run:
+	ps2client -h 192.168.1.10 execee host:neutrino.elf $(ARGS)
 
-run_mmce_qb: all
+run_mmce_qb:
 	ps2client -h 192.168.1.10 -t 1 execiop host:modules/iomanX.irx
 	ps2client -h 192.168.1.10 -t 1 execiop host:modules/fileXio.irx
 	ps2client -h 192.168.1.10 -t 1 execiop host:modules/mmceman.irx
-	ps2client -h 192.168.1.10 execee host:$(EE_BIN_PACKED) $(ARGS) -qb
+	ps2client -h 192.168.1.10 execee host:neutrino.elf $(ARGS) -qb
 
-sim: all
-	flatpak --filesystem=host run net.pcsx2.PCSX2 $(PWD)/ee/loader/$(EE_BIN_PACKED)
+sim:
+	flatpak --filesystem=host run net.pcsx2.PCSX2 $(CURDIR)/neutrino.elf
 
 # PCSX should be able to start with these, but the filename cannot contain spaces :(
 # -gameargs "host:neutrino.elf $(ARGS)"
 
 clean:
-	rm -rf $(EE_OBJS) *_irx.o *_elf.o
-	rm -rf $(EE_BIN) $(EE_BIN_PACKED)
+	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(OUT)/version.txt
 	rm -rf modules
-
-include $(PS2SDK)/Defs.make
-include ../Rules.make
