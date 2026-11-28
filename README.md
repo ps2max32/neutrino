@@ -285,6 +285,21 @@ ZSO    | `.zso`    | LZ4                  | `pip install lz4`
 CSO    | `.cso`    | zlib                 | none
 CHD    | `.chd`    | zlib/lzma/huff/flac  | `apt install libchdr0`
 
+## Building
+Neutrino is built with [ps2max](https://github.com/ps2max32/ps2max): its LLVM (clang and ld.lld for the EE and the IOP) and maxsdk (picolibc, the compiler-rt builtins and the IOP build rules). From ps2dev it only takes ps2sdk's IOP headers and a few of ps2sdk's prebuilt IOP modules (`udnl`, `eesync`, `iomanX`, `fileXio`, the BDM drivers). The EE programs do not use an SDK: `ee/mini` has the little of ps2sdk they need, on the PS2's BIOS.
+
+In a ps2max tree, with LLVM and maxsdk built (`build-llvm.sh` and `build-libs.sh`), neutrino in `apps/neutrino`:
+
+```sh
+git submodule update --init   # usmb2, unfs4, mmceman
+make                          # IOP modules, ee_core.elf and neutrino.elf, in build/apps/neutrino
+make release                  # releases/neutrino_<version>.7z: neutrino.elf, config/, modules/, the PC server
+```
+
+`PS2MAX=<dir>` names another ps2max tree, `PS2MAX_IRX=<dir>` another directory of ps2sdk's IOP modules, `OUT=<dir>` another build directory. `make copy` puts `neutrino.elf`, `version.txt` and `modules/` in `ee/loader`, next to `config/`, and `make run PS2_IP=<address>` starts it there on a PS2 with ps2link.
+
+The CI (`.github/workflows/ps2.yml`) builds with the LLVM and maxsdk commits that `ps2max.deps` names, and keeps the release package of every push as an artifact.
+
 ## Third-Party Loaders
 The following third-party projects use neutrino:
 

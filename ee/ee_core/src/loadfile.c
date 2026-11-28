@@ -23,10 +23,8 @@
 
 #include <loadfile.h>
 #include <iopheap.h>
-#include <fcntl.h>
-#include <unistd.h>
 
-extern int _iop_reboot_count; // defined in libkernel (iopcontrol.c)
+extern int _iop_reboot_count; // defined in mini (sifrpc.c)
 extern SifRpcClientData_t _lf_cd;
 extern int _lf_init;
 
@@ -200,7 +198,7 @@ int SifSearchModuleByAddress(const void *ptr)
 }
 #endif
 
-#ifdef F__SifLoadElfPart
+//#ifdef F__SifLoadElfPart
 int _SifLoadElfPart(const char *path, const char *secname, t_ExecData *data, int fno)
 {
     struct _lf_elf_load_arg arg;
@@ -225,7 +223,7 @@ int _SifLoadElfPart(const char *path, const char *secname, t_ExecData *data, int
     } else
         return -SCE_ELOADMISS;
 }
-#endif
+//#endif
 
 #if defined(F_SifLoadElfPart)
 int SifLoadElfPart(const char *path, const char *secname, t_ExecData *data)
@@ -234,13 +232,13 @@ int SifLoadElfPart(const char *path, const char *secname, t_ExecData *data)
 }
 #endif
 
-#if defined(F_SifLoadElf)
+//#if defined(F_SifLoadElf)
 int SifLoadElf(const char *path, t_ExecData *data)
 {
     u32 secname = 0x6c6c61; /* "all" */
     return _SifLoadElfPart(path, (char *)&secname, data, LF_F_ELF_LOAD);
 }
-#endif
+//#endif
 
 #if defined(F_SifLoadElfEncrypted)
 int SifLoadElfEncrypted(const char *path, t_ExecData *data)

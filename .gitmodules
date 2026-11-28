@@ -4,3 +4,7 @@
 [submodule "iop/nfs/unfs4"]
 	path = iop/nfs/unfs4
 	url = https://github.com/sahlberg/unfs4.git
+[submodule "iop/mmce/mmceman"]
+	path = iop/mmce/mmceman
+	url = https://github.com/rickgaiser/mmceman.git
+	branch = fhi

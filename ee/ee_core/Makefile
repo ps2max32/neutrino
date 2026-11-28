@@ -3,25 +3,26 @@
 # Licenced under Academic Free License version 3.0
 # Review OPNPS2LD README & LICENSE files for further details.
 #
-# Copyright 2001-2004, ps2dev - http://www.ps2dev.org
-# Licenced under Academic Free License version 2.0
-# Review ps2sdk README & LICENSE files for further details.
+# ee_core.elf, with LLVM and ../mini (no SDK):
 #
-# Standard Makefile
+#   make [EESIO_DEBUG=1] [OUT=<dir>]    <dir>/ee_core.elf
 
-EE_BIN = ee_core.elf
-EE_SRC_DIR = src/
-EE_OBJS_DIR = obj/
+PS2MAX ?= $(abspath $(CURDIR)/../../../..)
+OUT    ?= $(PS2MAX)/build/apps/neutrino
+PS2MAX_LLVM_BIN ?= $(PS2MAX)/build/toolchain/llvm/feature/bin
 
-GSMCORE_EE_OBJS = gsm_api.o ee_exception_l2.o
-CHEATCORE_EE_OBJS = cheat_engine.o cheat_api.o
+EE_BIN      = $(OUT)/ee_core.elf
+EE_OBJS_DIR = $(OUT)/obj/ee_core$(if $(filter 1,$(EESIO_DEBUG)),.debug)
 
-EE_OBJS = main.o iopmgr.o loadfile.o util.o patches.o patches_asm.o \
-	  asm.o crt0.o ps2logo.o $(GSMCORE_EE_OBJS) $(CHEATCORE_EE_OBJS)
-MAPFILE = ee_core.map
+OBJS = crt0.o main.o iopmgr.o loadfile.o util.o patches.o patches_asm.o asm.o ps2logo.o \
+       gsm_api.o ee_exception_l2.o cheat_engine.o cheat_api.o
+MINI_OBJS = syscalls.o kernel.o string.o sifrpc.o iopheap.o sbv.o
 
-EE_INCS := -I. -Iinclude -I../../common/include -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(GSKIT)/include
-EE_CFLAGS = -D_EE -Os -G0 -Wall -Werror -fdata-sections -ffunction-sections $(EE_INCS)
+EE_CC     = $(PS2MAX_LLVM_BIN)/clang
+EE_LD     = $(PS2MAX_LLVM_BIN)/ld.lld
+EE_CFLAGS = --target=mips64el -mcpu=r5900 -mabi=n32 -fno-pic -mno-abicalls -G0 -std=gnu17 -Wno-c23-extensions -ffreestanding \
+            -fno-builtin -fno-strict-aliasing -Os -Wall -Werror -ffunction-sections -fdata-sections -MMD -MP \
+            -D_EE -I. -Iinclude -I../../common/include -I../mini/include -I../mini/include/libc
 
 ifeq ($(EESIO_DEBUG),1)
 EE_CFLAGS += -D__EESIO_DEBUG
@@ -38,34 +39,38 @@ EE_CFLAGS += -D__LOAD_DEBUG_MODULES
 	endif
 endif
 
-EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%)
-
-EE_LDFLAGS = -nostartfiles -nostdlib -Tlinkfile -L$(PS2SDK)/ee/lib -s -Wl,-Map,$(MAPFILE) -Wl,-zmax-page-size=128 -Wl,--gc-sections
-EE_LIBS += -lpatches
-
-EE_LIBS += -lkernel -lgcc
-
-$(EE_OBJS_DIR)%.o : $(EE_SRC_DIR)%.c
-	@mkdir -p $(EE_OBJS_DIR)
-	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
-
-$(EE_OBJS_DIR)%.o : $(EE_SRC_DIR)%.S
-	@mkdir -p $(EE_OBJS_DIR)
-	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
-
-$(EE_OBJS_DIR)%.o : $(EE_SRC_DIR)%.s
-	@mkdir -p $(EE_OBJS_DIR)
-	$(EE_AS) $(EE_ASFLAGS) $< -o $@
-
-$(EE_BIN) : $(EE_OBJS)
-	$(EE_CC) $(EE_CFLAGS) $(EE_LDFLAGS) -o $(EE_BIN) $(EE_OBJS) $(EE_LIBS)
+EE_OBJS = $(OBJS:%=$(EE_OBJS_DIR)/%) $(MINI_OBJS:%=$(EE_OBJS_DIR)/mini/%)
 
 all: $(EE_BIN)
 
+$(EE_OBJS): Makefile
+
+$(EE_OBJS_DIR)/mini/%.o: ../mini/src/%.c
+	@mkdir -p $(@D)
+	$(EE_CC) $(EE_CFLAGS) -c $< -o $@
+
+$(EE_OBJS_DIR)/mini/%.o: ../mini/src/%.S
+	@mkdir -p $(@D)
+	$(EE_CC) $(EE_CFLAGS) -c $< -o $@
+
+$(EE_OBJS_DIR)/%.o: src/%.c
+	@mkdir -p $(@D)
+	$(EE_CC) $(EE_CFLAGS) -c $< -o $@
+
+$(EE_OBJS_DIR)/%.o: src/%.S
+	@mkdir -p $(@D)
+	$(EE_CC) $(EE_CFLAGS) -c $< -o $@
+
+# $(EE_OBJS_DIR)/ee_core.elf keeps the symbols
+$(EE_BIN): $(EE_OBJS) linkfile
+	@mkdir -p $(@D)
+	$(EE_LD) -m elf32ltsmipn32 -Tlinkfile -z max-page-size=128 --gc-sections -Map $(EE_OBJS_DIR)/ee_core.map \
+	  -o $(EE_OBJS_DIR)/ee_core.elf $(EE_OBJS)
+	$(PS2MAX_LLVM_BIN)/llvm-objcopy --strip-all $(EE_OBJS_DIR)/ee_core.elf $@
+
 clean:
-	rm -f -r $(EE_OBJS_DIR) $(EE_BIN) $(MAPFILE)
+	rm -rf $(EE_OBJS_DIR) $(EE_BIN)
 
-clean_all:
-	rm -f -r $(EE_OBJS_DIR) $(EE_BIN) $(MAPFILE)
+-include $(EE_OBJS:.o=.d)
 
-include $(PS2SDK)/samples/Makefile.pref
+.PHONY: all clean

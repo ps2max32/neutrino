@@ -78,15 +78,19 @@ int hookRegisterIntrHandler(int irq, int mode, int (*handler)(void *), void *arg
 void my_memcpy(void *dest, const void *src, size_t size)
 {
     asm volatile(
-        ".set noreorder\r\n"
-        "loop:\r\n"
-        "lw $v0, 0($a1)\n\t"
-        "addiu $a1, 4\r\n"
-        "sw $v0, 0($a0)\n\t"
-        "addi $a2, -4\n\t"
-        "bgtz $a2, loop\n\t"
-        "addiu $a0, 4\r\n"
-        ".set reorder\r\n");
+        ".set push\n\t"
+        ".set noreorder\n"
+        "1:\n\t"
+        "lw $v0, 0(%1)\n\t"
+        "addiu %1, 4\n\t"
+        "sw $v0, 0(%0)\n\t"
+        "addiu %2, -4\n\t"
+        "bgtz %2, 1b\n\t"
+        "addiu %0, 4\n\t"
+        ".set pop"
+        : "+r"(dest), "+r"(src), "+r"(size)
+        :
+        : "$2", "memory");
 }
 
 void *hookAllocSysMemory(u32 mode, u32 size, void *ptr)
